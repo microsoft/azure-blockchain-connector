@@ -10,6 +10,7 @@ import (
 	"net/http"
 )
 
+var username, password string
 var proxyParameter httpProxyParameter
 var pool *x509.CertPool
 var tp *http.Transport
@@ -21,13 +22,13 @@ type httpProxyParameter struct {
 }
 
 func ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	//change url
 	req.URL.Scheme = "https"
 	// req.URL.Host = "104.215.148.235:1234"
 	req.URL.Host = proxyParameter.host
 	req.Host = ""
 	req.RequestURI = ""
 	req.Header.Set("Accept-Encoding", "identity")
+	req.SetBasicAuth(username, password)
 
 	// do request and get response
 	response, err := client.Do(req)
@@ -42,7 +43,9 @@ func ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 func initParameter() {
 
 	flag.StringVar(&proxyParameter.port, "port", "1234", "The port you want to listen")
-	flag.StringVar(&proxyParameter.host, "host", "104.215.148.235:1234", "The host you want to send to")
+	flag.StringVar(&proxyParameter.host, "host", "104.215.148.235:2333", "The host you want to send to")
+	flag.StringVar(&username, "username", "root", "The username you want to login with")
+	flag.StringVar(&password, "password", "12345677", "The password you want to login with")
 	flag.Parse()
 	fmt.Print("The aim port is: ")
 	fmt.Println(proxyParameter.port)
