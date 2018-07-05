@@ -41,8 +41,7 @@ func ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	// client setting
 	tp := &http.Transport{
 		TLSClientConfig: &tls.Config{RootCAs: pool},
-		// 	// skip verify
-		// 	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		// TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 	client := &http.Client{Transport: tp}
 
@@ -53,15 +52,13 @@ func ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 	defer response.Body.Close()
-	body, err := ioutil.ReadAll(response.Body)
-	fmt.Println(string(body))
 	io.Copy(rw, response.Body)
 }
 
 func initParameter() {
 
 	flag.StringVar(&proxyParameter.port, "port", "1234", "The port you want to listen")
-	flag.StringVar(&proxyParameter.host, "host", "api.github.com", "The host you want to send to")
+	flag.StringVar(&proxyParameter.host, "host", "104.215.148.235:1234", "The host you want to send to")
 	flag.Parse()
 	fmt.Print("The aim port is: ")
 	fmt.Println(proxyParameter.port)
