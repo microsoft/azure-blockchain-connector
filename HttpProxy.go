@@ -11,6 +11,9 @@ import (
 )
 
 var proxyParameter httpProxyParameter
+var pool *x509.CertPool
+var tp *http.Transport
+var client *http.Client
 
 type httpProxyParameter struct {
 	port string
@@ -18,32 +21,13 @@ type httpProxyParameter struct {
 }
 
 func ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	//req.URL.
+	//change url
 	req.URL.Scheme = "https"
-	// req.URL.Host = "api.github.com"
-	// req.URL.Host = "127.0.0.1:1235"
 	// req.URL.Host = "104.215.148.235:1234"
 	req.URL.Host = proxyParameter.host
 	req.Host = ""
 	req.RequestURI = ""
 	req.Header.Set("Accept-Encoding", "identity")
-
-	// ca cert setting
-	pool := x509.NewCertPool()
-	caCertPath := "ca.crt"
-	caCrt, err := ioutil.ReadFile(caCertPath)
-	if err != nil {
-		fmt.Println("ReadFile err:", err)
-		return
-	}
-	pool.AppendCertsFromPEM(caCrt)
-
-	// client setting
-	tp := &http.Transport{
-		TLSClientConfig: &tls.Config{RootCAs: pool},
-		// TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
-	client := &http.Client{Transport: tp}
 
 	// do request and get response
 	response, err := client.Do(req)
@@ -66,6 +50,25 @@ func initParameter() {
 	fmt.Println(proxyParameter.host)
 }
 
+func initClient() {
+	// ca cert setting
+	pool = x509.NewCertPool()
+	caCertPath := "ca.crt"
+	caCrt, err := ioutil.ReadFile(caCertPath)
+	if err != nil {
+		fmt.Println("ReadFile err:", err)
+		return
+	}
+	pool.AppendCertsFromPEM(caCrt)
+
+	// client setting
+	tp = &http.Transport{
+		TLSClientConfig: &tls.Config{RootCAs: pool},
+		// TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client = &http.Client{Transport: tp}
+}
+
 func main() {
 	/*proxyParameter := httpProxyParameter{
 		//port: "1234",
@@ -73,6 +76,7 @@ func main() {
 	}*/
 
 	initParameter()
+	initClient()
 	//fmt.Print(proxyParameter)
 	http.HandleFunc("/", ServeHTTP)
 	fmt.Println("Listen on 127.0.0.1:" + proxyParameter.port)
