@@ -41,15 +41,11 @@ func ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 func initParameter() {
 
-	flag.StringVar(&proxyParameter.port, "port", "1234", "The port you want to listen")
-	flag.StringVar(&proxyParameter.host, "host", "104.215.148.235:3200", "The host you want to send to")
-	flag.StringVar(&username, "username", "root", "The username you want to login with")
-	flag.StringVar(&password, "password", "123456", "The password you want to login with")
+	flag.StringVar(&proxyParameter.port, "port", "1234", "The port you want to listen at local.")
+	flag.StringVar(&proxyParameter.host, "host", "104.215.148.235:3200", "The host you want to send to.")
+	flag.StringVar(&username, "username", "root", "The username you want to login with.")
+	flag.StringVar(&password, "password", "123456", "The password you want to login with.")
 	flag.Parse()
-	fmt.Print("The aim port is: ")
-	fmt.Println(proxyParameter.port)
-	fmt.Print("The aim host is: ")
-	fmt.Println(proxyParameter.host)
 }
 
 func initClient(caCertPath string) {
