@@ -8,29 +8,34 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 )
 
-var username, password string
-var proxyParameter httpProxyParameter
-var pool *x509.CertPool
-var tp *http.Transport
-var client *http.Client
+const defaultLocal = "127.0.0.1:3100"
 
-type httpProxyParameter struct {
-	port string
-	host string
+type proxyParams struct {
+	local, remote                string
+	username, password, certPath string
+	pool                         *x509.CertPool
+	client                       *http.Client
 }
 
-func ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+type proxyHandler struct{
+	params *proxyParams
+}
+
+func (handler proxyHandler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	var params = handler.params
+
 	req.URL.Scheme = "https"
-	req.URL.Host = proxyParameter.host
+	req.URL.Host = params.remote
 	req.Host = ""
 	req.RequestURI = ""
 	req.Header.Set("Accept-Encoding", "identity")
-	req.SetBasicAuth(username, password)
+	req.SetBasicAuth(params.username, params.password)
 
 	// do request and get response
-	response, err := client.Do(req)
+	response, err := params.client.Do(req)
 	if err != nil {
 		fmt.Println("error:", err)
 		return
@@ -39,47 +44,54 @@ func ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	io.Copy(rw, response.Body)
 }
 
-func initParameter() {
-
-	flag.StringVar(&proxyParameter.port, "port", "1234", "The port you want to listen at local.")
-	flag.StringVar(&proxyParameter.host, "host", "104.215.148.235:3200", "The host you want to send to.")
-	flag.StringVar(&username, "username", "root", "The username you want to login with.")
-	flag.StringVar(&password, "password", "123456", "The password you want to login with.")
+func initParameter(params *proxyParams) {
+	flag.StringVar(&params.local, "local", "", "Local address to bind to")
+	flag.StringVar(&params.remote, "remote", "", "Remote endpoint address")
+	flag.StringVar(&params.username, "username", "", "The username you want to login with.")
+	flag.StringVar(&params.password, "password", "", "The password you want to login with.")
+	flag.StringVar(&params.certPath, "cert", "", "(Optional) File path to root CA")
 	flag.Parse()
+
+	if params.local == "" {
+		params.local = defaultLocal
+	}
+
+	if params.remote == "" || params.username == "" || params.password == "" {
+		flag.Usage()
+		os.Exit(-1)
+	}
 }
 
-func initClient(caCertPath string) {
-	// ca cert setting
-	pool = x509.NewCertPool()
-	//caCertPath := "ca.crt"
+func initCACert(params *proxyParams)  {
+	var caCertPath = params.certPath
 	if caCertPath != "" {
 		caCrt, err := ioutil.ReadFile(caCertPath)
 		if err != nil {
 			fmt.Println("ReadFile err:", err)
 			return
 		}
-		pool.AppendCertsFromPEM(caCrt)
+		params.pool.AppendCertsFromPEM(caCrt)
 	}
+}
+
+func initHttpClient(params *proxyParams) {
+	params.pool = x509.NewCertPool()
+	initCACert(params)
 
 	// client setting
-	tp = &http.Transport{
-		TLSClientConfig: &tls.Config{RootCAs: pool},
+	var tp = http.Transport{
+		TLSClientConfig: &tls.Config{RootCAs: params.pool},
 		// TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
-	client = &http.Client{Transport: tp}
+	params.client = &http.Client{Transport: &tp}
 }
 
 func main() {
-	initParameter()
-
-	//if we don't need to inject any crt, set caCertPath=""
-	caCertPath := "ca.crt"
-	initClient(caCertPath)
-
-	//fmt.Print(proxyParameter)
-	http.HandleFunc("/", ServeHTTP)
-	fmt.Println("Listen on 127.0.0.1:" + proxyParameter.port)
-	fmt.Println("The request will be transport to: " + proxyParameter.host)
-	http.ListenAndServe("127.0.0.1:"+proxyParameter.port, nil)
-	fmt.Println("Listen on port " + proxyParameter.port)
+	var params = proxyParams{}
+	initParameter(&params)
+	initHttpClient(&params)
+	fmt.Println("The request will be transport to: " + params.remote)
+	fmt.Println("Listen on " + params.local)
+	http.ListenAndServe(params.remote, proxyHandler{params:&params})
+	fmt.Println("Listen on local " + params.local)
 }
