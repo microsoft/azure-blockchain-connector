@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/signal"
 )
 
 const defaultLocal = "127.0.0.1:3100"
@@ -87,11 +88,14 @@ func initHttpClient(params *proxyParams) {
 }
 
 func main() {
+	var cancellation = make(chan os.Signal)
 	var params = proxyParams{}
 	initParameter(&params)
 	initHttpClient(&params)
 	fmt.Println("The request will be transport to: " + params.remote)
 	fmt.Println("Listen on " + params.local)
 	http.ListenAndServe(params.remote, proxyHandler{params:&params})
-	fmt.Println("Listen on local " + params.local)
+
+	signal.Notify(cancellation, os.Interrupt)
+	<- cancellation
 }
