@@ -36,7 +36,7 @@ func (handler proxyHandler) ServeHTTP(rw http.ResponseWriter, req *http.Request)
 	req.SetBasicAuth(params.username, params.password)
 
 	// do request and get response
-	response, err := params.client.Do(req)
+	var response, err = params.client.Do(req)
 	if err != nil {
 		fmt.Println("error:", err)
 		return
@@ -94,8 +94,11 @@ func main() {
 	initHttpClient(&params)
 	fmt.Println("The request will be transport to: " + params.remote)
 	fmt.Println("Listen on " + params.local)
-	http.ListenAndServe(params.remote, proxyHandler{params:&params})
+	if err := http.ListenAndServe(params.remote, proxyHandler{params:&params}); err != nil {
+		fmt.Println("Error on listening: ", err)
+	}
 
 	signal.Notify(cancellation, os.Interrupt)
 	<- cancellation
+	fmt.Println("Cancelling...")
 }
