@@ -1,5 +1,4 @@
 FROM golang:1.10 AS build
-
 WORKDIR /go/src/app
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build connector.go
