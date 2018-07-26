@@ -97,6 +97,7 @@ func main() {
 	fmt.Println("Listen on " + params.local)
 	if err := http.ListenAndServe(params.remote, proxyHandler{params:&params}); err != nil {
 		fmt.Println("Error on listening: ", err)
+		os.Exit(-2)
 	} else {
 		fmt.Println("Connector started")
 	}
