@@ -17,6 +17,7 @@ const defaultLocal = "127.0.0.1:3100"
 type proxyParams struct {
 	local, remote                string
 	username, password, certPath string
+	insecure					 bool
 	pool                         *x509.CertPool
 	client                       *http.Client
 }
@@ -49,9 +50,10 @@ func (handler proxyHandler) ServeHTTP(rw http.ResponseWriter, req *http.Request)
 func initParameter(params *proxyParams) {
 	flag.StringVar(&params.local, "local", "", "Local address to bind to")
 	flag.StringVar(&params.remote, "remote", "", "Remote endpoint address")
-	flag.StringVar(&params.username, "username", "", "The username you want to login with.")
-	flag.StringVar(&params.password, "password", "", "The password you want to login with.")
+	flag.StringVar(&params.username, "username", "", "The username you want to login with")
+	flag.StringVar(&params.password, "password", "", "The password you want to login with")
 	flag.StringVar(&params.certPath, "cert", "", "(Optional) File path to root CA")
+	flag.BoolVar(&params.insecure, "insecure", false, "Skip certificate verifications")
 	flag.Parse()
 
 	if params.local == "" {
@@ -82,8 +84,10 @@ func initHttpClient(params *proxyParams) {
 
 	// client setting
 	var tp = http.Transport{
-		TLSClientConfig: &tls.Config{RootCAs: params.pool},
-		// TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig: &tls.Config{
+			RootCAs: params.pool,
+			InsecureSkipVerify: params.insecure,
+		},
 	}
 	params.client = &http.Client{Transport: &tp}
 }
