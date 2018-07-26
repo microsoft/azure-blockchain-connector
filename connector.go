@@ -28,6 +28,7 @@ type proxyHandler struct{
 func (handler proxyHandler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	var params = handler.params
 
+	fmt.Println("Requesting: ", req.URL.RequestURI())
 	req.URL.Scheme = "https"
 	req.URL.Host = params.remote
 	req.Host = ""
@@ -96,6 +97,8 @@ func main() {
 	fmt.Println("Listen on " + params.local)
 	if err := http.ListenAndServe(params.remote, proxyHandler{params:&params}); err != nil {
 		fmt.Println("Error on listening: ", err)
+	} else {
+		fmt.Println("Connector started")
 	}
 
 	signal.Notify(cancellation, os.Interrupt)
