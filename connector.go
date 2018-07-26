@@ -95,7 +95,7 @@ func main() {
 	initHttpClient(&params)
 	fmt.Println("The request will be transport to: " + params.remote)
 	fmt.Println("Listen on " + params.local)
-	if err := http.ListenAndServe(params.remote, proxyHandler{params:&params}); err != nil {
+	if err := http.ListenAndServe(params.local, proxyHandler{params:&params}); err != nil {
 		fmt.Println("Error on listening: ", err)
 		os.Exit(-2)
 	} else {
