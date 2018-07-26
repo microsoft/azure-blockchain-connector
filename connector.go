@@ -17,12 +17,12 @@ const defaultLocal = "127.0.0.1:3100"
 type proxyParams struct {
 	local, remote                string
 	username, password, certPath string
-	insecure					 bool
+	insecure                     bool
 	pool                         *x509.CertPool
 	client                       *http.Client
 }
 
-type proxyHandler struct{
+type proxyHandler struct {
 	params *proxyParams
 }
 
@@ -66,7 +66,7 @@ func initParameter(params *proxyParams) {
 	}
 }
 
-func initCACert(params *proxyParams)  {
+func initCACert(params *proxyParams) {
 	var caCertPath = params.certPath
 	if caCertPath != "" {
 		caCrt, err := ioutil.ReadFile(caCertPath)
@@ -85,7 +85,7 @@ func initHttpClient(params *proxyParams) {
 	// client setting
 	var tp = http.Transport{
 		TLSClientConfig: &tls.Config{
-			RootCAs: params.pool,
+			RootCAs:            params.pool,
 			InsecureSkipVerify: params.insecure,
 		},
 	}
@@ -99,7 +99,7 @@ func main() {
 	initHttpClient(&params)
 	fmt.Println("The request will be transport to: " + params.remote)
 	fmt.Println("Listen on " + params.local)
-	if err := http.ListenAndServe(params.local, proxyHandler{params:&params}); err != nil {
+	if err := http.ListenAndServe(params.local, proxyHandler{params: &params}); err != nil {
 		fmt.Println("Error on listening: ", err)
 		os.Exit(-2)
 	} else {
@@ -107,6 +107,6 @@ func main() {
 	}
 
 	signal.Notify(cancellation, os.Interrupt)
-	<- cancellation
+	<-cancellation
 	fmt.Println("Cancelling...")
 }
