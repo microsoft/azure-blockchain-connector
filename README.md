@@ -1,6 +1,12 @@
 # Blockchain Connector
 
-This is a proxy for you to connect to the blockchain safely. We provide three ways for you to use it: 1.Compile our source code (implement with golang) and run it. 2.Run it in Docker Container, with the Dockerfile we presented in this branch. 3.Run with the binary release (not available yet).
+This is a proxy for you to connect to the blockchain safely. We provide three ways for you to use it: 
+
+    - Compile our source code (implement with golang) and run it.
+    
+    - Run it in Docker Container, with the Dockerfile we presented in this branch. 
+    
+    - Run with the binary release (not available yet).
 
 ## Run with the Source Code
 
