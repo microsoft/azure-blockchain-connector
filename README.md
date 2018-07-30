@@ -48,37 +48,40 @@ where <container_name> is the name of the container you are to run, and \<parame
 
    - **username** *string*
 
-   ​        The username you want to login with. (no default)
+            The username you want to login with (no default).
 
    - **password** *string*
 
-   ​        The password you want to login with. (no default)
+            The password you want to login with (no default).
 
    - **local** *string*
 
-   ​        Local address to bind to. (default "1234")
+            Local address to bind to (default "127.0.0.1:3100"). Note that local address can be non-local, But if so, you should make sure the connection from your computer to the "local address" is safe (e.g. the connection is in a LAN).
 
    - **remote** *string*
 
-           The host you want to send to. (no default)
+           The host you want to send to (no default).
 
-2. example:
+2. example for users who run with our source code:
 
    ```bash
-   ./HttpProxy -username user -password 12345 -port 1111
+   ./<outputFile> -username user -password 12345 -remote https://microsoft.com/ -local 127.0.0.1:3100 
    ```
 
-3. parameters for developer:
+3. examples for users who run with Docker
+    ```bash
+   docker run --net=host --name=<container_name> <image_name> -username user -password 12345 -remote https://microsoft.com/ -local 127.0.0.1:3100 
+   ```
 
-If you want to use this connector to test your environment, but you only have a self-signed SSL certificate, the parameters below may help you:
-
+4. If you want to use this connector to test your environment, but you only have a self-signed SSL certificate, the parameters below may help you:
+  
    - **cert** *string*
 
-            the CA cert of your self-signed certificate.
+            The CA cert of your self-signed certificate.
 
    - **insecure** *bool*
 
-            indicate if it should skip certificate verifications.
+            Indicating if it should skip certificate verifications.
 
 # Contributing
 
