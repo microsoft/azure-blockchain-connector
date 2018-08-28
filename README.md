@@ -1,3 +1,93 @@
+# Blockchain Connector
+
+This is a proxy for you to connect to the blockchain safely. We provide three ways for you to use it: 
+
+    - Compile our source code (implement with golang) and run it.
+    
+    - Run it in Docker Container, with the Dockerfile we presented in this branch. 
+    
+    - Run with the binary release (not available yet).
+
+## Run with the Source Code
+
+1. Get the environment of golang ready.
+
+2. 
+```bash
+go get github.com/Microsoft/azure-blockchain-connector/tree/basic_auth
+```
+
+3. In the project directory, run
+```bash
+go build -o <outputFile> HttpProxy.go
+```
+
+where \<outputFile\> is the name of the executable file you want to specify with, "HttpProxy" if not specified.
+
+4. 
+```bash
+./<outputFile>  <parameters>
+```
+where \<parameters\> is the parameters needed by the program. To know about the parameters in detail, see the section "Parameters". 
+
+## Run with the Dockerfile
+
+1. Get the environment for Docker.
+
+2. Clone or download this repo to anywhere you like (If you clone it, please make sure to check out to the brunch "basic_auth").
+
+3. Run in the project directory
+```bash
+docker build -t <image_name> .
+```
+where \<image_name\> is the name of the output image.
+
+4. 
+```bash
+docker run --net=host --name=<container_name> <image_name> <parameters>
+```
+where <container_name> is the name of the container you are to run, and \<parameters\> are the parameters of the entrypoint (which essentially are the parameters of the golang code). To know about the parameters in detail, see the section "Parameters".
+
+## Parameters
+
+1. parameters:
+
+   - **username** *string*
+
+            The username you want to login with (no default).
+
+   - **password** *string*
+
+            The password you want to login with (no default).
+
+   - **local** *string*
+
+            Local address to bind to (default "127.0.0.1:3100"). Note that local address can be non-local, But if so, you should make sure the connection from your computer to the "local address" is safe (e.g. the connection is in a LAN).
+
+   - **remote** *string*
+
+           The host you want to send to (no default).
+
+2. example for users who run with our source code:
+
+   ```bash
+   ./<outputFile> -username user -password 12345 -remote https://microsoft.com/ -local 127.0.0.1:3100 
+   ```
+
+3. examples for users who run with Docker
+    ```bash
+   docker run --net=host --name=<container_name> <image_name> -username user -password 12345 -remote https://microsoft.com/ -local 127.0.0.1:3100 
+   ```
+
+4. If you want to use this connector to test your environment, but you only have a self-signed SSL certificate, the parameters below may help you:
+  
+   - **cert** *string*
+
+            The CA cert of your self-signed certificate.
+
+   - **insecure** *bool*
+
+            Indicating if it should skip certificate verifications.
 
 # Contributing
 
