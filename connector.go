@@ -28,14 +28,14 @@ type proxyHandler struct {
 
 func (handler proxyHandler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	var params = handler.params
-
-	fmt.Println("Requesting: ", req.URL.RequestURI())
 	req.URL.Scheme = "https"
 	req.URL.Host = params.remote
 	req.Host = ""
 	req.RequestURI = ""
 	req.Header.Set("Accept-Encoding", "identity")
 	req.SetBasicAuth(params.username, params.password)
+
+	fmt.Println("Requesting:", req.Method, req.URL)
 
 	// do request and get response
 	var response, err = params.client.Do(req)
@@ -44,6 +44,7 @@ func (handler proxyHandler) ServeHTTP(rw http.ResponseWriter, req *http.Request)
 		return
 	}
 	defer response.Body.Close()
+	rw.WriteHeader(response.StatusCode)
 	io.Copy(rw, response.Body)
 }
 
@@ -88,8 +89,30 @@ func initHttpClient(params *proxyParams) {
 			RootCAs:            params.pool,
 			InsecureSkipVerify: params.insecure,
 		},
+		MaxIdleConnsPerHost: 1024,
 	}
 	params.client = &http.Client{Transport: &tp}
+}
+
+func testConnection(params *proxyParams) {
+	req, err := http.NewRequest(http.MethodGet, "https://"+params.remote, nil)
+	if err != nil {
+		fmt.Println(err)
+	}
+	req.Header.Set("Accept-Encoding", "identity")
+	req.SetBasicAuth(params.username, params.password)
+	res, err := params.client.Do(req)
+	if err != nil {
+		fmt.Println("Error occurred when sending test request to the remote host:")
+		fmt.Println(err)
+		fmt.Println("Please check your Internet connection and the remote host address.")
+		os.Exit(-2)
+	}
+	if res.StatusCode == 401 {
+		fmt.Println("Unable to pass the authentication on the remote server. Please Check your username and password.")
+		os.Exit(-2)
+	}
+
 }
 
 func main() {
@@ -97,6 +120,7 @@ func main() {
 	var params = proxyParams{}
 	initParameter(&params)
 	initHttpClient(&params)
+	testConnection(&params)
 	fmt.Println("The request will be transport to: " + params.remote)
 	fmt.Println("Listen on " + params.local)
 	if err := http.ListenAndServe(params.local, proxyHandler{params: &params}); err != nil {
