@@ -1,11 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"crypto/tls"
 	"crypto/x509"
 	"flag"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -28,24 +28,50 @@ type proxyHandler struct {
 
 func (handler proxyHandler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	var params = handler.params
-	req.URL.Scheme = "https"
-	req.URL.Host = params.remote
-	req.Host = ""
-	req.RequestURI = ""
-	req.Header.Set("Accept-Encoding", "identity")
-	req.SetBasicAuth(params.username, params.password)
+	//req.URL.Scheme = "https"
+	//req.URL.Host = params.remote
+	//req.Host = ""
+	//req.RequestURI = ""
+	//req.Header.Set("Accept-Encoding", "identity")
+	//req.SetBasicAuth(params.username, params.password)
 
-	fmt.Println("Requesting:", req.Method, req.URL)
+	//fmt.Println("Requesting:", req.Method, req.URL)
+	//logStr := "Requesting: " + req.Method + " " + req.URL.String() + "\n"
+	logStr := fmt.Sprintln("Requesting:", req.Method, req.URL)
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(req.Body)
+	//fmt.Println(buf.String())
+	logStr += buf.String() + "\n"
+
+	req1, err := http.NewRequest(req.Method, "https://"+params.remote, buf)
+	if err != nil {
+		fmt.Println("Error when make transport request:")
+		fmt.Println(err)
+	}
+	req1.ContentLength = req.ContentLength
+	req1.Header = req.Header
+	req1.Method = req.Method
+	req1.SetBasicAuth(params.username, params.password)
 
 	// do request and get response
-	var response, err = params.client.Do(req)
+	response, err := params.client.Do(req1)
 	if err != nil {
 		fmt.Println("error:", err)
+		//logStr += "Error:" + err.Error() + "\n\n"
+		logStr = fmt.Sprintln(logStr, "Error:\n", err, "\n")
+		fmt.Println(logStr)
 		return
 	}
 	defer response.Body.Close()
+
+	buf = new(bytes.Buffer)
+	buf.ReadFrom(response.Body)
+	logStr = fmt.Sprintln(logStr, "Response Status Code:", response.StatusCode)
+	logStr = fmt.Sprintln(logStr, buf.String(), "\n")
+	fmt.Println(logStr)
 	rw.WriteHeader(response.StatusCode)
-	io.Copy(rw, response.Body)
+	//io.Copy(rw, response.Body)
+	rw.Write(buf.Bytes())
 }
 
 func initParameter(params *proxyParams) {
