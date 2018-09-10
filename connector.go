@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 )
 
 const defaultLocal = "127.0.0.1:3100"
@@ -28,26 +29,32 @@ type proxyHandler struct {
 
 func (handler proxyHandler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	var params = handler.params
-	//req.URL.Scheme = "https"
-	//req.URL.Host = params.remote
-	//req.Host = ""
-	//req.RequestURI = ""
-	//req.Header.Set("Accept-Encoding", "identity")
-	//req.SetBasicAuth(params.username, params.password)
 
-	//fmt.Println("Requesting:", req.Method, req.URL)
-	//logStr := "Requesting: " + req.Method + " " + req.URL.String() + "\n"
-	logStr := fmt.Sprintln("Requesting:", req.Method, req.URL)
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(req.Body)
-	//fmt.Println(buf.String())
-	logStr += buf.String() + "\n"
 
-	req1, err := http.NewRequest(req.Method, "https://"+params.remote, buf)
+	var logStrBuilder *strings.Builder
+	logStrBuilder = new(strings.Builder)
+	/* Notice that here the func in defer is needed!
+	 * By doing so, defer will register the pointer strBuilder, and we can change what the pointer points to later.
+	 * Without the func, what defer registers is not the pointer strBuilder, and defer will konw no later changes to the stringbulider.
+	 */
+	defer func(strBuilder *strings.Builder) {
+		fmt.Println(strBuilder.String())
+	}(logStrBuilder)
+
+	req.URL.Host = params.remote
+	req.URL.Scheme = "https"
+
+	logStrBuilder.WriteString(fmt.Sprintln("Requesting:", req.Method, req.URL))
+	logStrBuilder.WriteString(buf.String() + "\n")
+
+	req1, err := http.NewRequest(req.Method, req.URL.String(), buf)
 	if err != nil {
-		fmt.Println("Error when make transport request:")
-		fmt.Println(err)
+		logStrBuilder.WriteString(fmt.Sprintln("Error when make transport request:\n", err))
+		return
 	}
+	//fmt.Println(req1.URL)
 	req1.ContentLength = req.ContentLength
 	req1.Header = req.Header
 	req1.Method = req.Method
@@ -56,21 +63,18 @@ func (handler proxyHandler) ServeHTTP(rw http.ResponseWriter, req *http.Request)
 	// do request and get response
 	response, err := params.client.Do(req1)
 	if err != nil {
-		fmt.Println("error:", err)
-		//logStr += "Error:" + err.Error() + "\n\n"
-		logStr = fmt.Sprintln(logStr, "Error:\n", err, "\n")
-		fmt.Println(logStr)
+		logStrBuilder.WriteString(fmt.Sprintln("Error:\n", err))
 		return
 	}
 	defer response.Body.Close()
 
 	buf = new(bytes.Buffer)
 	buf.ReadFrom(response.Body)
-	logStr = fmt.Sprintln(logStr, "Response Status Code:", response.StatusCode)
-	logStr = fmt.Sprintln(logStr, buf.String(), "\n")
-	fmt.Println(logStr)
+
+	logStrBuilder.WriteString(fmt.Sprintln("Response Status Code:", response.StatusCode))
+	logStrBuilder.WriteString(fmt.Sprintln(buf.String()))
+
 	rw.WriteHeader(response.StatusCode)
-	//io.Copy(rw, response.Body)
 	rw.Write(buf.Bytes())
 }
 
