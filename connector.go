@@ -30,33 +30,31 @@ type proxyHandler struct {
 }
 
 const (
-	whenlog_onError  int = iota //print log only for those who raise exceptions
-	whenlog_onNon200            //print log for those who have a non-200 response, or those who raise exceptions
-	whenlog_always              //print log for every request
+	whenlog_onError  int = iota // print log only for those who raise exceptions
+	whenlog_onNon200            // print log for those who have a non-200 response, or those who raise exceptions
+	whenlog_always              // print log for every request
 )
 
 const (
-	whatlog_basic    int = iota //print the request's method and URI and the response status code (and the exception message, if exception raised) in the log
-	whatlog_detailed            //print the request's method, URI and body, and the response status code and body (and the exception message, if exception raised) in the log
-	//whatlog_all				//to be supported later. Compared to whatlog_detail, all Headers are printed in whatlog_all
+	whatlog_basic    int = iota // print the request's method and URI and the response status code (and the exception message, if exception raised) in the log
+	whatlog_detailed            // print the request's method, URI and body, and the response status code and body (and the exception message, if exception raised) in the log
+	//whatlog_all				// to be supported later. Compared to whatlog_detail, all Headers are printed in whatlog_all
 )
 
 func (handler proxyHandler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	var params = handler.params
 
-	/**logFlag is initialized with value true.
-	 * it will be set false if our program finally ensure it's not needed to print the log (depends on the running state and params.whenlog).
-	 * when ServeHTTP finished (or crashed), if logFlag remains true, log will be printed
-	 */
+	// logFlag is initialized with value true.
+	// it will be set false if our program finally ensure it's not needed to print the log (depends on the running state and params.whenlog).
+	// when ServeHTTP finished (or crashed), if logFlag remains true, log will be printed
 	logFlag := new(bool)
 	*logFlag = true
 
 	logStrBuilder := new(strings.Builder)
 
-	/**Notice that here the func in defer is needed!
-	 * By doing so, defer will register the pointer strBuilder and flag, and we can change what the pointers point to later.
-	 * Without the func, what defer registers is not the pointers, and defer will know nothing about the later changes to stringbulider and flag.
-	 */
+	// Notice that here the func in defer is needed!
+	// By doing so, defer will register the pointer strBuilder and flag, and we can change what the pointers point to later.
+	// Without the func, what defer registers is not the pointers, and defer will know nothing about the later changes to stringbulider and flag.
 	defer func(strBuilder *strings.Builder, flag *bool) {
 		if *flag {
 			fmt.Println(strBuilder.String())
@@ -74,6 +72,7 @@ func (handler proxyHandler) ServeHTTP(rw http.ResponseWriter, req *http.Request)
 		logStrBuilder.WriteString(buf.String() + "\n")
 	}
 
+	// build the transport request
 	req1, err := http.NewRequest(req.Method, req.URL.String(), buf)
 	if err != nil {
 		logStrBuilder.WriteString(fmt.Sprintln("Error when make transport request:\n", err))
@@ -103,6 +102,7 @@ func (handler proxyHandler) ServeHTTP(rw http.ResponseWriter, req *http.Request)
 	rw.WriteHeader(response.StatusCode)
 	rw.Write(buf.Bytes())
 
+	// check if logFlag should be set to false
 	if params.whenlog == whenlog_onError {
 		*logFlag = false
 	}
@@ -117,6 +117,7 @@ func initParameter(params *proxyParams) {
 	var whenlogstr string
 	var whatlogstr string
 	var debugmode bool
+
 	flag.StringVar(&params.local, "local", "", "Local address to bind to")
 	flag.StringVar(&params.remote, "remote", "", "Remote endpoint address")
 	flag.StringVar(&params.username, "username", "", "The username you want to login with")
