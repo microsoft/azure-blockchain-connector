@@ -21,40 +21,64 @@ type proxyParams struct {
 	insecure                     bool
 	pool                         *x509.CertPool
 	client                       *http.Client
+	whenlog                      int
+	whatlog                      int
 }
 
 type proxyHandler struct {
 	params *proxyParams
 }
 
+const (
+	whenlog_onError  int = iota //print log only for those who raise exceptions
+	whenlog_onNon200            //print log for those who have a non-200 response, or those who raise exceptions
+	whenlog_always              //print log for every request
+)
+
+const (
+	whatlog_basic    int = iota //print the request's method and URI and the response status code (and the exception message, if exception raised) in the log
+	whatlog_detailed            //print the request's method, URI and body, and the response status code and body (and the exception message, if exception raised) in the log
+	//whatlog_all				//to be supported later. Compared to whatlog_detail, all Headers are printed in whatlog_all
+)
+
 func (handler proxyHandler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	var params = handler.params
 
+	/**logFlag is initialized with value true.
+	 * it will be set false if our program finally ensure it's not needed to print the log (depends on the running state and params.whenlog).
+	 * when ServeHTTP finished (or crashed), if logFlag remains true, log will be printed
+	 */
+	logFlag := new(bool)
+	*logFlag = true
+
+	logStrBuilder := new(strings.Builder)
+
+	/**Notice that here the func in defer is needed!
+	 * By doing so, defer will register the pointer strBuilder and flag, and we can change what the pointers point to later.
+	 * Without the func, what defer registers is not the pointers, and defer will know nothing about the later changes to stringbulider and flag.
+	 */
+	defer func(strBuilder *strings.Builder, flag *bool) {
+		if *flag {
+			fmt.Println(strBuilder.String())
+		}
+	}(logStrBuilder, logFlag)
+
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(req.Body)
-
-	var logStrBuilder *strings.Builder
-	logStrBuilder = new(strings.Builder)
-	/* Notice that here the func in defer is needed!
-	 * By doing so, defer will register the pointer strBuilder, and we can change what the pointer points to later.
-	 * Without the func, what defer registers is not the pointer strBuilder, and defer will konw no later changes to the stringbulider.
-	 */
-	defer func(strBuilder *strings.Builder) {
-		fmt.Println(strBuilder.String())
-	}(logStrBuilder)
 
 	req.URL.Host = params.remote
 	req.URL.Scheme = "https"
 
 	logStrBuilder.WriteString(fmt.Sprintln("Requesting:", req.Method, req.URL))
-	logStrBuilder.WriteString(buf.String() + "\n")
+	if params.whatlog >= whatlog_detailed {
+		logStrBuilder.WriteString(buf.String() + "\n")
+	}
 
 	req1, err := http.NewRequest(req.Method, req.URL.String(), buf)
 	if err != nil {
 		logStrBuilder.WriteString(fmt.Sprintln("Error when make transport request:\n", err))
 		return
 	}
-	//fmt.Println(req1.URL)
 	req1.ContentLength = req.ContentLength
 	req1.Header = req.Header
 	req1.Method = req.Method
@@ -63,7 +87,7 @@ func (handler proxyHandler) ServeHTTP(rw http.ResponseWriter, req *http.Request)
 	// do request and get response
 	response, err := params.client.Do(req1)
 	if err != nil {
-		logStrBuilder.WriteString(fmt.Sprintln("Error:\n", err))
+		logStrBuilder.WriteString(fmt.Sprintln("Error when send the transport request:\n", err))
 		return
 	}
 	defer response.Body.Close()
@@ -72,19 +96,38 @@ func (handler proxyHandler) ServeHTTP(rw http.ResponseWriter, req *http.Request)
 	buf.ReadFrom(response.Body)
 
 	logStrBuilder.WriteString(fmt.Sprintln("Response Status Code:", response.StatusCode))
-	logStrBuilder.WriteString(fmt.Sprintln(buf.String()))
+	if params.whatlog >= whatlog_detailed {
+		logStrBuilder.WriteString(fmt.Sprintln(buf.String()))
+	}
 
 	rw.WriteHeader(response.StatusCode)
 	rw.Write(buf.Bytes())
+
+	if params.whenlog == whenlog_onError {
+		*logFlag = false
+	}
+	if params.whenlog == whenlog_onNon200 {
+		if response.StatusCode == 200 {
+			*logFlag = false
+		}
+	}
 }
 
 func initParameter(params *proxyParams) {
+	var whenlogstr string
+	var whatlogstr string
+	var debugmode bool
 	flag.StringVar(&params.local, "local", "", "Local address to bind to")
 	flag.StringVar(&params.remote, "remote", "", "Remote endpoint address")
 	flag.StringVar(&params.username, "username", "", "The username you want to login with")
 	flag.StringVar(&params.password, "password", "", "The password you want to login with")
 	flag.StringVar(&params.certPath, "cert", "", "(Optional) File path to root CA")
 	flag.BoolVar(&params.insecure, "insecure", false, "Skip certificate verifications")
+
+	flag.StringVar(&whenlogstr, "whenlog", "onError", "Configuration about in what cases logs should be prited. Alternatives: always, onNon200 and onError. Default: onError")
+	flag.StringVar(&whatlogstr, "whatlog", "basic", "Configuration about what information should be included in logs. Alternatives: basic and detailed. Default: basic")
+	flag.BoolVar(&debugmode, "debugmode", false, "Open debug mode. It will set whenlog to always and whatlog to detailed, and original settings for whenlog and whatlog are covered.")
+
 	flag.Parse()
 
 	if params.local == "" {
@@ -94,6 +137,33 @@ func initParameter(params *proxyParams) {
 	if params.remote == "" || params.username == "" || params.password == "" {
 		flag.Usage()
 		os.Exit(-1)
+	}
+
+	switch whenlogstr {
+	case "onError":
+		params.whenlog = whenlog_onError
+	case "onNon200":
+		params.whenlog = whenlog_onNon200
+	case "always":
+		params.whenlog = whenlog_always
+	default:
+		fmt.Println("Unexpected whenlog value. Expected: always, onNon200 or onError")
+		os.Exit(-1)
+	}
+
+	switch whatlogstr {
+	case "basic":
+		params.whatlog = whatlog_basic
+	case "detailed":
+		params.whatlog = whatlog_detailed
+	default:
+		fmt.Println("Unexpected whatlog value. Expected: basic or detailed")
+		os.Exit(-1)
+	}
+
+	if debugmode {
+		params.whenlog = whenlog_always
+		params.whatlog = whatlog_detailed
 	}
 }
 
