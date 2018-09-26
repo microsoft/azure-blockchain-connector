@@ -22,24 +22,18 @@ npm install web3@0.20.7
 ```
 
 Notice:
-
-    - only web3@0.20.1 to web3@0.20.7 can make the sample works.
-
-    - for versions that are not higher than 0.20.0 , web3.providers.HttpProvider cannot add the authorization header to the request correctly.
-
-    - for versions that are not lower than 1.0.0-beta.1, truffle cannot run correctly (the most likely reason is interface changing)
+ - only web3@0.20.1 to web3@0.20.7 can make the sample works.
+ - for versions that are not higher than 0.20.0 , web3.providers.HttpProvider cannot add the authorization header to the request correctly.
+ - for versions that are not lower than 1.0.0-beta.1, truffle cannot run correctly (the most possible reason is interface changing)
 
 # Network Setting and Account Setting
 
 1. Open **truffle.js** and change the parameters \<node_uri\>, \<username\>, \<password\> ,\<account\> and \<account_passphase\> to your own parameters.
 
 Notice:
-
-    - The "Account Unlock" part is not always needed. We add it here because our sample will deploy a contract, and this action needs an account.
-
-    - If you didn't have any accounts, just comment the code in "Account Unlock" and "Sender Account Assignation" part and continue. Later you'll know how to get an account.
-
-    - In your own application, you may choose to unlock an account at some other position, or even you may not need to unlock any account.
+ - The "Account Unlock" part is not always needed. We add it here because our sample will deploy a contract, and this action needs an account.
+ - If you didn't have any accounts, just comment the code in "Account Unlock" and "Sender Account Assignation" part and continue. Later you'll know how to get an account.
+ - In your own application, you may choose to unlock an account at some other position, or even you may not need to unlock any account.
 
 2. In the folder, run:
 ```bash
