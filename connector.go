@@ -44,11 +44,24 @@ const (
 func (handler proxyHandler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	var params = handler.params
 
+	//completeFlag indicates if the server has finished constructing the response. It's initialized with value false.
+	//It will be set to true when response construction finished.
+	// when ServeHTTP finished (or crashed), if completeFlag remains false, the server will set the response's status code to 502.
+	completeFlag := false
+
+	// Notice that here the func in defer is needed!
+	// By doing so, defer will register the pointer flag and rw, and we can change what the pointers point to later.
+	// Without the func, what defer registers is not the pointers, so defer will know nothing about the later changes to completeFlag, and defer cannot write to the origin ResponseWriter.
+	defer func(flag *bool, rw *http.ResponseWriter) {
+		if !(*flag) {
+			(*rw).WriteHeader(502)
+		}
+	}(&completeFlag, &rw)
+
 	// logFlag is initialized with value true.
 	// it will be set false if our program finally ensure it's not needed to print the log (depends on the running state and params.whenlog).
 	// when ServeHTTP finished (or crashed), if logFlag remains true, log will be printed
-	logFlag := new(bool)
-	*logFlag = true
+	logFlag := true
 
 	logStrBuilder := new(strings.Builder)
 
@@ -59,7 +72,7 @@ func (handler proxyHandler) ServeHTTP(rw http.ResponseWriter, req *http.Request)
 		if *flag {
 			fmt.Println(strBuilder.String())
 		}
-	}(logStrBuilder, logFlag)
+	}(logStrBuilder, &logFlag)
 
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(req.Body)
@@ -102,13 +115,16 @@ func (handler proxyHandler) ServeHTTP(rw http.ResponseWriter, req *http.Request)
 	rw.WriteHeader(response.StatusCode)
 	rw.Write(buf.Bytes())
 
+	//Set completeFlag to indicate that the response construction finished
+	completeFlag = true
+
 	// check if logFlag should be set to false
 	if params.whenlog == whenlog_onError {
-		*logFlag = false
+		logFlag = false
 	}
 	if params.whenlog == whenlog_onNon200 {
 		if response.StatusCode == 200 {
-			*logFlag = false
+			logFlag = false
 		}
 	}
 }
