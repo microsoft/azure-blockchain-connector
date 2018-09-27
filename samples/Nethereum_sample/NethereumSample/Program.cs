@@ -16,23 +16,16 @@ namespace NethereumSample
         //Please set your own parameters here!!!
         //If you haven't got an account, you can uncomment the code in the region "new account",
         //set the passphase of your future account in the variable accountPassphase, and skip the setting of the variable "account".
-        #region parameters
-        static string username = "testmember";
-        static string password = "123456";
-        static string nodeUri = "https://testmember.blockchain.ppe.azure-int.net:3200";
-        //static string nodeUri = "http://127.0.0.1:3101";
-        static string account = "0xafc7400cdec0b3ed6267d73c327e5c6689e2171b";
-        static string accountPassphase = "123456";
-        /*
+        #region parameters        
         static string username = "<username>";
         static string password = "<password>";
         static string nodeUri = "<node_uri>";
         static string account = "<account>";
-        static string accountPassphase = "<account_passphase>";
-        */
+        static string accountPassphase = "<account_passphase>";        
         #endregion
 
         static Web3 web3 = null;
+
         static void Main(string[] args)
         {
             //This region is the key part to let Nethereum to connect to the transaction nodes directly without the blockchain connector!
@@ -47,7 +40,7 @@ namespace NethereumSample
             #endregion
 
             #region new account
-            newAccount();
+            //newAccount();
             #endregion
 
             #region account preparation
@@ -80,13 +73,15 @@ namespace NethereumSample
             const string contractByteCode = "0x608060405234801561001057600080fd5b50602a60008190555060df806100276000396000f3006080604052600436106049576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff1680636d4ce63c14604e578063e5c19b2d146076575b600080fd5b348015605957600080fd5b50606060a0565b6040518082815260200191505060405180910390f35b348015608157600080fd5b50609e6004803603810190808035906020019092919050505060a9565b005b60008054905090565b80600081905550505600a165627a7a723058200e577c111b0ee4c2177cd4431abe395d21431e594a9441e820442f4ddbbe484f0029";
             const string abi = @"[{""constant"":true, ""inputs"":[],""name"":""get"",""outputs"":[{""name"":"""",""type"":""int256""}],""payable"":false,""stateMutability"":""view"",""type"":""function""},{""constant"":false,""inputs"":[{""name"":""_a"",""type"":""int256""}],""name"":""set"",""outputs"":[],""payable"":false,""stateMutability"":""nonpayable"",""type"":""function""},{""inputs"":[],""payable"":false,""stateMutability"":""nonpayable"",""type"":""constructor""}]";
             var receiptDeploy = web3.Eth.DeployContract.SendRequestAndWaitForReceiptAsync(abi, contractByteCode, account, new HexBigInteger(4700000), new HexBigInteger(0), new HexBigInteger(0), null).Result;
+
             Trace.Assert(receiptDeploy.Status.Value.IsOne, "Contract Deployment failed. Check if it ran out of gas.");
+
             Console.WriteLine("Contract deploying finished:");
-            Console.WriteLine("ContractAddress: " + receiptDeploy.ContractAddress);
-            Console.WriteLine("BlockHash: " + receiptDeploy.BlockHash);
-            Console.WriteLine("TransactionHash: " + receiptDeploy.TransactionHash);
-            Console.WriteLine("Blocknumber: " + receiptDeploy.BlockNumber.Value);
-            Console.WriteLine();
+            Console.WriteLine("    ContractAddress: " + receiptDeploy.ContractAddress);
+            Console.WriteLine("    BlockHash: " + receiptDeploy.BlockHash);
+            Console.WriteLine("    TransactionHash: " + receiptDeploy.TransactionHash);
+            Console.WriteLine("    Blocknumber: " + receiptDeploy.BlockNumber.Value);
+            Console.WriteLine("\nSample code finished successfully!");
 
         }
         static void newAccount()
