@@ -55,7 +55,8 @@ namespace NethereumSample
         }
         static void unlockAccount()
         {
-            //As Parity and Quorum have different interface about 
+            //As Parity and Quorum have different interface on jsonrpc method "personal_unlockAccount", we need to switch the unlock code manually.
+            //Please make sure that, in the two regions below, only one region is uncommented.
 
             #region Parity unlock
             var success = web3.Personal.UnlockAccount.SendRequestAsync(account, accountPassphase, new HexBigInteger(60)).Result;
