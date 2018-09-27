@@ -1,4 +1,4 @@
-#Nethereum Connection Sample
+# Nethereum Connection Sample
 
 This is the sample code to show how we can let Nethereum to connect to our transaction nodes directly, without the blockchain connector.
 
@@ -6,7 +6,7 @@ To start quickly, you can just have a look on **Nethereum/Program.cs**. Note tha
 
 If you want to have a deep look on this sample code, please see the sections below for more infomation.
 
-#Dependency
+# Dependency
 
 This sample is a .Net Core 2.0 console app. It has 3 dependencies from Nuget:
 
@@ -19,7 +19,7 @@ This sample is a .Net Core 2.0 console app. It has 3 dependencies from Nuget:
 Note:
  - Here the last two packages are dependencies of "Nethereum.Portable" and haven't beed directly used in the sample code.
 
-#How to Run the Sample Code
+# How to Run the Sample Code
 
 1. Set the parameters: 
  - Go to the region "parameters", and set the parameters following the comments.
@@ -43,7 +43,7 @@ Contract deploying finished:
 Sample code finished successfully!
 ```
 
-#Explanation of the Code
+# Explanation of the Code
 
 1. The most important part of the code is the region "web3 initialization". After init the Web3 instance in this way, you can connect to the transaction node with the Web3 instance.
 
