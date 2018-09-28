@@ -60,7 +60,7 @@ and you'll see a string, which is your account address (of course, it can be fil
 
 Then you need to Uncomment the code in **truffle.js**, which you've commented in step 1.
 
-#Truffle Migrate
+# Truffle Migrate
 
 1. Run:
 ```bash
@@ -82,7 +82,7 @@ which indicates the sample runs successfully!
 
 If you met the connection error "Could not connect to your Ethereum client. Please check that ......", Please see the section "SSL Cert Injection" for help.
 
-#SSL Cert Injection
+# SSL Cert Injection
 The connection error "Could not connect to your Ethereum client. Please check that ......" may caused by that web3 consider the ssl cert of the transaction node as an unsafe cert. If it's caused by this reason, we can recover it by injecting the cert manually:
 
 1. Uncomment the code in "SSL Cert Injection" part.
