@@ -61,6 +61,7 @@ namespace NethereumSample
             testTransaction();
             #endregion
 
+            Console.WriteLine("Sample code finished successfully!");
             Console.ReadKey();
         }
         static void unlockAccount()
