@@ -3,12 +3,13 @@ using System.Text;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Diagnostics;
+using System.Security.Cryptography.X509Certificates;
+using System.Net.Security;
 
 using Nethereum.Web3;
 using Nethereum.JsonRpc.Client;
 using Nethereum.Web3.Accounts.Managed;
 using Nethereum.Hex.HexTypes;
-
 namespace NethereumSample
 {
     class Program
@@ -25,18 +26,27 @@ namespace NethereumSample
         #endregion
 
         static Web3 web3 = null;
+        static HttpClientHandler clientHandler = null;
 
         static void Main(string[] args)
         {
+            //uncomment the code in this region if you met the issue that the cert of the transaction node cannot be verified.
+            #region clietHandler init
+            //InitHandler();
+            #endregion
+
             //This region is the key part to let Nethereum to connect to the transaction nodes directly without the blockchain connector!
-            //Following the code in this region, you can use the instance web3 to connect to the transaction nodes.
-            #region web3 initialization
+            //Following the code in this region, you can use the instance web3 to connect to the transaction nodes.            
+            #region web3 init
+
             var authValue = Convert.ToBase64String(Encoding.UTF8.GetBytes(string.Format("{0}:{1}", username, password)));
             var authHeader = new AuthenticationHeaderValue("Basic", authValue);
-            web3 = new Web3(new RpcClient(new Uri(nodeUri), authHeader, null, null));
+            web3 = new Web3(new RpcClient(new Uri(nodeUri), authHeader, null, clientHandler));
+            //Notice: clientHandler is null if the code in region "clietHandler init" remains commented.
 
             //if you want to construct a Web3 instance with a managed account, you can use the code below:
-            //web3 = new Web3(new ManagedAccount(account, accountPassphase), new RpcClient(new Uri(nodeUri), authHeader, null, null));
+            //web3 = new Web3(new ManagedAccount(account, accountPassphase), new RpcClient(new Uri(nodeUri), authHeader, null, clientHandler));
+
             #endregion
 
             #region new account
@@ -91,6 +101,31 @@ namespace NethereumSample
             Console.WriteLine("New account successed! The account address is:");
             Console.WriteLine(account);
             Console.WriteLine();
+        }
+        static void InitHandler()
+        {
+            //We just hard coded the issuer and the thumbPrint of the Root CA in the code, 
+            //and we just want to verify if the Root CA of the transaction node is the hard-encoded ca.
+            const string issuer = "CN=Baltimore CyberTrust Root, OU=CyberTrust, O=Baltimore, C=IE";
+            const string thumbPrint = "D4DE20D05E66FC53FE1A50882C78DB2852CAE474";
+            clientHandler = new HttpClientHandler();            
+            clientHandler.ServerCertificateCustomValidationCallback = (sender, cert, chain, errors) =>
+            {
+                if (chain == null)
+                    return false;
+                if (errors != SslPolicyErrors.None)
+                    return false;
+                X509Certificate2 cert2 = null;
+
+                //the last element of chain.ChainElements should be the root ca
+                foreach (var x in chain.ChainElements)
+                {
+                    cert2 = x.Certificate;
+                }
+                if (issuer == cert2.Issuer && thumbPrint == cert2.Thumbprint)
+                    return true;
+                return false;
+            };
         }
     }
 }

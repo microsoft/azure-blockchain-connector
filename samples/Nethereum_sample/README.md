@@ -43,9 +43,11 @@ Contract deploying finished:
 Sample code finished successfully!
 ```
 
+Notice: If you meet the problem that the cert of the transaction node cannot be verified, see section "Cert Verification" for help.
+
 # Explanation of the Code
 
-1. The most important part of the code is the region "web3 initialization". After init the Web3 instance in this way, you can connect to the transaction node with the Web3 instance.
+1. The most important part of the code is the region "web3 init". After init the Web3 instance in this way, you can connect to the transaction node with the Web3 instance.
 
 2. Difference about construct Web3 with or without a managed account:
  - If a Web3 instance is constructed without a managed account, the jsonrpc method "eth_sendtransaction" is called when using this Web3 instance to send transaction.
@@ -65,4 +67,10 @@ Note:
  - The new account also need to be unlocked, so do not forget to do the 2nd step in section "How to Run the Sample Code".
  - It's not recommend to apply for a new account everytime you run the sample code (or other code that need an account).
 
+# Cert Verification
 
+If the cert of the transaction node cannot be verified, you can simply uncomment the code in the region "clietHandler init" to tackle the issue. Here is some notice about it:
+
+1. From some experiments, we found the reason why the cert cannot be verified is that the client doesn't know the root ca (while the cert chain is a right cert chain). 
+
+2. We just hard coded the right root ca's issuer and thumbPrint in clientHandler.ServerCertificateCustomValidationCallback(), and verify the node's root ca.
