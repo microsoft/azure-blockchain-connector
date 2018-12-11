@@ -5,11 +5,11 @@ import (
 	"azure-blockchain-connector/aad/deviceflow"
 	"crypto/tls"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"golang.org/x/oauth2"
 	"io/ioutil"
 	"net/http"
-	"os"
 )
 
 const (
@@ -79,26 +79,23 @@ func (params *Params) initHttpClient() {
 
 func (params *Params) Init() {
 	params.initHttpClient()
-
 }
 
-func (params *Params) TestConn() {
+func (params *Params) TestConn() error {
 	req, err := http.NewRequest(http.MethodGet, "https://"+params.Remote, nil)
 	if err != nil {
-		fmt.Println(err)
-	}
-	req.Header.Set("Accept-Encoding", "identity")
-	req.SetBasicAuth(params.Username, params.Password)
-	res, err := params.Client.Do(req)
-	if err != nil {
-		fmt.Println("Error occurred when sending test request to the remote host:")
-		fmt.Println(err)
-		fmt.Println("Please check your Internet connection and the remote host address.")
-		os.Exit(-2)
-	}
-	if res.StatusCode == 401 {
-		fmt.Println("Unable to pass the authentication on the remote server. Please Check your username and password.")
-		os.Exit(-2)
+		return err
 	}
 
+	req.Header.Set("Accept-Encoding", "identity")
+	req.SetBasicAuth(params.Username, params.Password)
+
+	res, err := params.Client.Do(req)
+	if err != nil {
+		return err
+	}
+	if res.StatusCode == 401 {
+		return errors.New("unable to pass the authentication on the remote server")
+	}
+	return nil
 }

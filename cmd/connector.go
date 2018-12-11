@@ -3,35 +3,23 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"os"
-	"os/signal"
 )
 
+// See flags.go for detail
 const (
 	defaultLocalAddr   = "127.0.0.1:3100"
 	defaultAuthSvcAddr = "127.0.0.1:3101"
 )
 
 func main() {
-	var cancellation = make(chan os.Signal)
+	c := whenCancelling(nil)
 
-	var p = NewProxyFromFlags()
-
+	p := newProxyFromFlags()
 	p.Init()
-	p.TestConn()
+	check(p.TestConn())
 
-	fmt.Println("Requests will be transport to: " + p.Remote)
-	fmt.Println("Listen on " + p.Local)
+	check(http.ListenAndServe(p.Local, p))
+	fmt.Println("Tunneling:", p.Local, "->", p.Remote)
 
-	err := http.ListenAndServe(p.Local, p.Handler())
-	if err != nil {
-		fmt.Println("Error on listening: ", err)
-		os.Exit(-2)
-	}
-
-	fmt.Println("Connector started")
-
-	signal.Notify(cancellation, os.Interrupt)
-	<-cancellation
-	fmt.Println("Cancelling...")
+	<-c
 }

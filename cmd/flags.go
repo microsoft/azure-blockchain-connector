@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-func NewProxyFromFlags() *proxy.Proxy {
+func newProxyFromFlags() *proxy.Proxy {
 	var params = &proxy.Params{}
 
 	flag.StringVar(&params.Local, "local", defaultLocalAddr, "Local address to bind to")
