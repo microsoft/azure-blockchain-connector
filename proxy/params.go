@@ -1,7 +1,6 @@
 package proxy
 
 import (
-	"azure-blockchain-connector/aad"
 	"azure-blockchain-connector/aad/deviceflow"
 	"crypto/tls"
 	"crypto/x509"
@@ -13,9 +12,9 @@ import (
 )
 
 const (
-	OAuthGrantTypeNone       = ""
-	OAuthGrantTypeAuthCode   = "authcode"
-	OauthGrantTypeDeviceFlow = "device"
+	MethodBasicAuth       = ""
+	MethodOAuthAuthCode   = "authcode"
+	MethodOAuthDeviceFlow = "device"
 
 	LogWhenOnError  = "onError"  // print log only for those who raise exceptions
 	LogWhenOnNon200 = "onNon200" // print log for those who have a non-200 response, or those who raise exceptions
@@ -27,30 +26,23 @@ const (
 )
 
 type Params struct {
-	Local, Remote string
+	Local  string
+	Remote string
+	Method string
 
-	CertPath string
-	pool     *x509.CertPool
-	Insecure bool
-
+	CertPath           string
+	Insecure           bool
 	Username, Password string
-	AuthCodeConf       *oauth2.Config
-	AuthSvcAddr        string
-	DeviceFlowConf     *deviceflow.Config
+	pool               *x509.CertPool
+
+	AuthCodeConf   *oauth2.Config
+	AuthSvcAddr    string
+	DeviceFlowConf *deviceflow.Config
 
 	Client *http.Client
 
 	Whenlog string
 	Whatlog string
-}
-
-func (params *Params) SetOAuthConfig(typ, clientID, clientSecret, scopes string) {
-	switch typ {
-	case OAuthGrantTypeAuthCode:
-		params.AuthCodeConf = aad.NewAuthCodeConfig(clientID, clientSecret, scopes)
-	case OauthGrantTypeDeviceFlow:
-		params.DeviceFlowConf = aad.NewDeviceFlowConfig(clientID, scopes)
-	}
 }
 
 func (params *Params) initCACert() {
@@ -81,7 +73,7 @@ func (params *Params) Init() {
 	params.initHttpClient()
 }
 
-func (params *Params) TestConn() error {
+func (params *Params) testBasicAuth() error {
 	req, err := http.NewRequest(http.MethodGet, "https://"+params.Remote, nil)
 	if err != nil {
 		return err

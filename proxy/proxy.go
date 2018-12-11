@@ -9,6 +9,7 @@ import (
 
 type Proxy struct {
 	*Params
+	Provider *Provider
 }
 
 // todo: more error handling
