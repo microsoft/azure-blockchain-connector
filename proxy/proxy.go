@@ -9,7 +9,7 @@ import (
 
 type Proxy struct {
 	*Params
-	Provider *Provider
+	Provider Provider
 }
 
 // todo: more error handling
@@ -67,10 +67,12 @@ func (p *Proxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	req1.ContentLength = req.ContentLength
 	req1.Header = req.Header
 	req1.Method = req.Method
-	req1.SetBasicAuth(params.Username, params.Password)
+
+	p.Provider.Modify(params, req1)
+	//req1.SetBasicAuth(params.Username, params.Password)
 
 	// do request and get response
-	response, err := params.Client.Do(req1)
+	response, err := p.Provider.Client(params).Do(req1)
 	if err != nil {
 		logStrBuilder.WriteString(fmt.Sprintln("Error when send the transport request:\n", err))
 		return

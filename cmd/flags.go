@@ -29,21 +29,22 @@ func newProxyFromFlags() *proxy.Proxy {
 	var params = &proxy.Params{}
 
 	flag.StringVar(&params.Method, "method", proxy.MethodBasicAuth, "AAD: Grant type if use AAD OAuth, 'authcode' for authorization code grant or 'device' for device flow grant.")
-
-	// basic auth
 	flag.StringVar(&params.Local, "local", defaultLocalAddr, "Local address to bind to")
 	flag.StringVar(&params.Remote, "remote", "", "Remote endpoint address")
-	flag.StringVar(&params.CertPath, "cert", "", "(Optional) File path to root CA")
-	flag.BoolVar(&params.Insecure, "insecure", false, "Skip certificate verifications")
-	flag.StringVar(&params.Username, "username", "", "Basic auth: The username you want to login with")
-	flag.StringVar(&params.Password, "password", "", "Basic auth: The password you want to login with")
+
+	// basic auth
+	var ba = &proxy.BasicAuth{}
+	flag.StringVar(&ba.CertPath, "cert", "", "(Optional) File path to root CA")
+	flag.BoolVar(&ba.Insecure, "insecure", false, "Skip certificate verifications")
+	flag.StringVar(&ba.Username, "username", "", "Basic auth: The username you want to login with")
+	flag.StringVar(&ba.Password, "password", "", "Basic auth: The password you want to login with")
 
 	// AAD OAuth
-	var clientID, clientSecret, scopes string
+	var clientID, clientSecret, scopes, authSvcAddr string
 	flag.StringVar(&clientID, "client-id", "", "AAD: Client ID")
 	flag.StringVar(&clientSecret, "client-secret", "", "AAD: Client Secret, required when grant type is 'authcode'")
 	flag.StringVar(&scopes, "scopes", "", "AAD: Scope, should be a space-delimiter string")
-	flag.StringVar(&params.AuthSvcAddr, "svc-addr", defaultAuthSvcAddr, "Should be consistent with AAD redirect config")
+	flag.StringVar(&authSvcAddr, "svc-addr", defaultAuthSvcAddr, "Should be consistent with AAD redirect config")
 
 	var whenlogstr string
 	var whatlogstr string
@@ -73,18 +74,26 @@ func newProxyFromFlags() *proxy.Proxy {
 		params.Whatlog = proxy.LogWhatDetailed
 	}
 
-	var p *proxy.Provider
+	return &proxy.Proxy{Params: params, Provider: func() proxy.Provider {
 
-	switch params.Method {
-	case proxy.MethodBasicAuth:
-		checkStr(params.Remote, params.Username, params.Password)
-	case proxy.MethodOAuthAuthCode:
-		checkStr(clientID, clientSecret)
-		params.AuthCodeConf = aad.NewAuthCodeConfig(clientID, clientSecret, scopes)
-	case proxy.MethodOAuthDeviceFlow:
-		checkStr(clientID)
-		params.DeviceFlowConf = aad.NewDeviceFlowConfig(clientID, scopes)
-	}
-
-	return &proxy.Proxy{Params: params, Provider: p}
+		switch params.Method {
+		case proxy.MethodOAuthAuthCode:
+			checkStr(clientID, clientSecret)
+			return &proxy.OAuthAuthCode{
+				Config:  aad.NewAuthCodeConfig(clientID, clientSecret, scopes),
+				SvcAddr: authSvcAddr,
+			}
+		case proxy.MethodOAuthDeviceFlow:
+			checkStr(clientID)
+			return &proxy.OAuthDeviceFlow{
+				Config: aad.NewDeviceFlowConfig(clientID, scopes),
+			}
+		case proxy.MethodBasicAuth:
+			fallthrough
+		default:
+			ba.Remote = params.Remote
+			checkStr(ba.Remote, ba.Username, ba.Password)
+			return ba
+		}
+	}()}
 }

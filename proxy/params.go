@@ -1,16 +1,5 @@
 package proxy
 
-import (
-	"azure-blockchain-connector/aad/deviceflow"
-	"crypto/tls"
-	"crypto/x509"
-	"errors"
-	"fmt"
-	"golang.org/x/oauth2"
-	"io/ioutil"
-	"net/http"
-)
-
 const (
 	MethodBasicAuth       = ""
 	MethodOAuthAuthCode   = "authcode"
@@ -30,64 +19,6 @@ type Params struct {
 	Remote string
 	Method string
 
-	CertPath           string
-	Insecure           bool
-	Username, Password string
-	pool               *x509.CertPool
-
-	AuthCodeConf   *oauth2.Config
-	AuthSvcAddr    string
-	DeviceFlowConf *deviceflow.Config
-
-	Client *http.Client
-
 	Whenlog string
 	Whatlog string
-}
-
-func (params *Params) initCACert() {
-	var caCertPath = params.CertPath
-	if caCertPath != "" {
-		caCrt, err := ioutil.ReadFile(caCertPath)
-		if err != nil {
-			fmt.Println("ReadFile err:", err)
-			return
-		}
-		params.pool.AppendCertsFromPEM(caCrt)
-	}
-}
-
-func (params *Params) initHttpClient() {
-	params.pool = x509.NewCertPool()
-	params.initCACert()
-	params.Client = &http.Client{Transport: &http.Transport{
-		TLSClientConfig: &tls.Config{
-			RootCAs:            params.pool,
-			InsecureSkipVerify: params.Insecure,
-		},
-		MaxIdleConnsPerHost: 1024,
-	}}
-}
-
-func (params *Params) Init() {
-	params.initHttpClient()
-}
-
-func (params *Params) testBasicAuth() error {
-	req, err := http.NewRequest(http.MethodGet, "https://"+params.Remote, nil)
-	if err != nil {
-		return err
-	}
-
-	req.Header.Set("Accept-Encoding", "identity")
-	req.SetBasicAuth(params.Username, params.Password)
-
-	res, err := params.Client.Do(req)
-	if err != nil {
-		return err
-	}
-	if res.StatusCode == 401 {
-		return errors.New("unable to pass the authentication on the remote server")
-	}
-	return nil
 }

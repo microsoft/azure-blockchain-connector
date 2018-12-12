@@ -2,7 +2,6 @@ package aad
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/google/uuid"
 	"golang.org/x/oauth2"
@@ -12,15 +11,20 @@ import (
 
 var stateToken = uuid.New().String()
 
-func AuthCodeGrant(conf *oauth2.Config, svcAddr string) {
-	ctx := context.Background()
+func AuthCodeGrant(ctx context.Context, conf *oauth2.Config, svcAddr string) (*oauth2.Token, error) {
 
 	authUrl := conf.AuthCodeURL(stateToken, oauth2.AccessTypeOffline)
 	fmt.Println("Authorize:", "http://"+svcAddr+"/authorization")
 
 	mux := http.NewServeMux()
+	srv := &http.Server{Addr: svcAddr, Handler: mux}
+
 	mux.Handle("/", http.RedirectHandler("/authorization", http.StatusSeeOther))
 	mux.Handle("/authorization", http.RedirectHandler(authUrl, http.StatusSeeOther))
+
+	complete := make(chan struct{})
+	var tok *oauth2.Token
+	var err error
 	mux.HandleFunc("/authorization/callback", func(w http.ResponseWriter, r *http.Request) {
 		queries := r.URL.Query()
 		code := queries.Get("code")
@@ -32,16 +36,32 @@ func AuthCodeGrant(conf *oauth2.Config, svcAddr string) {
 		}
 
 		// exchange authorization_code for access_token
-		tok, err := conf.Exchange(ctx, code)
+		tok, err = conf.Exchange(ctx, code)
 		if err != nil {
-			log.Fatal(err)
+			return
 		}
 
-		tokJson, err := json.Marshal(tok)
-		fmt.Println(string(tokJson))
+		close(complete)
 
 		//client := conf.Client(ctx, tok)
+
 	})
 
-	log.Fatal(http.ListenAndServe(svcAddr, mux))
+	srvErr := make(chan error, 1)
+	go func() {
+		srvErr <- srv.ListenAndServe()
+	}()
+
+	select {
+	case <-complete:
+		go func() {
+			err := srv.Shutdown(ctx)
+			if err != nil {
+				log.Println(err)
+			}
+		}()
+		return tok, err
+	case err := <-srvErr:
+		return nil, err
+	}
 }
