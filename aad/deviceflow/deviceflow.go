@@ -3,6 +3,7 @@ package deviceflow
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"golang.org/x/net/context/ctxhttp"
 	"net/http"
 	"net/url"
@@ -73,7 +74,15 @@ type Token struct {
 	TokenType    string `json:"token_type"`
 	RefreshToken string `json:"refresh_token"`
 	ExpiresIn    int    `json:"expires_in"`
+	Error        string `json:"error"`
 }
+
+const (
+	ErrAuthorizationPending = "authorization_pending"
+	ErrSlowDown             = "slow_down"
+	ErrAccessDenied         = "access_denied"
+	ErrExpiredToken         = "expired_token"
+)
 
 // Poll does a polling to get token.
 func (c *Config) Poll(ctx context.Context, da *DeviceAuth) (*Token, error) {
@@ -108,13 +117,21 @@ func (c *Config) Poll(ctx context.Context, da *DeviceAuth) (*Token, error) {
 			return nil, err
 		}
 
-		if code := res.StatusCode; code < 200 || code > 299 {
-			// todo: more corresponding processing, e.g cancel polling when asked
-			continue
-		}
-
 		var tok = &Token{}
 		err = json.NewDecoder(res.Body).Decode(tok)
-		return tok, err
+
+		if res.StatusCode == http.StatusOK {
+			return tok, err
+		}
+
+		switch tok.Error {
+		case ErrAccessDenied, ErrExpiredToken:
+			return tok, errors.New("oauth2: " + tok.Error)
+		case ErrSlowDown:
+			interval += 5
+			fallthrough
+		case ErrAuthorizationPending:
+		}
+
 	}
 }

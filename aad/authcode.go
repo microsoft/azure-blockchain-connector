@@ -41,10 +41,8 @@ func AuthCodeGrant(ctx context.Context, conf *oauth2.Config, svcAddr string) (*o
 			return
 		}
 
-		close(complete)
-
 		//client := conf.Client(ctx, tok)
-
+		close(complete)
 	})
 
 	srvErr := make(chan error, 1)

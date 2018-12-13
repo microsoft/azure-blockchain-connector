@@ -3,6 +3,7 @@ package main
 import (
 	"azure-blockchain-connector/aad"
 	"azure-blockchain-connector/proxy"
+	"azure-blockchain-connector/proxy/providers"
 	"flag"
 	"fmt"
 	"os"
@@ -33,15 +34,16 @@ func newProxyFromFlags() *proxy.Proxy {
 	flag.StringVar(&params.Remote, "remote", "", "Remote endpoint address")
 
 	// basic auth
-	var ba = &proxy.BasicAuth{}
+	var ba = &providers.BasicAuth{}
 	flag.StringVar(&ba.CertPath, "cert", "", "(Optional) File path to root CA")
 	flag.BoolVar(&ba.Insecure, "insecure", false, "Skip certificate verifications")
 	flag.StringVar(&ba.Username, "username", "", "Basic auth: The username you want to login with")
 	flag.StringVar(&ba.Password, "password", "", "Basic auth: The password you want to login with")
 
 	// AAD OAuth
-	var clientID, clientSecret, scopes, authSvcAddr string
-	flag.StringVar(&clientID, "client-id", "", "AAD: Client ID")
+	var clientID, tenantID, clientSecret, scopes, authSvcAddr string
+	flag.StringVar(&clientID, "client-id", "", "AAD: Application (client) ID")
+	flag.StringVar(&tenantID, "tenant-id", "", "AAD: Directory (tenant) ID")
 	flag.StringVar(&clientSecret, "client-secret", "", "AAD: Client Secret, required when grant type is 'authcode'")
 	flag.StringVar(&scopes, "scopes", "", "AAD: Scope, should be a space-delimiter string")
 	flag.StringVar(&authSvcAddr, "svc-addr", defaultAuthSvcAddr, "Should be consistent with AAD redirect config")
@@ -78,15 +80,15 @@ func newProxyFromFlags() *proxy.Proxy {
 
 		switch params.Method {
 		case proxy.MethodOAuthAuthCode:
-			checkStr(clientID, clientSecret)
-			return &proxy.OAuthAuthCode{
-				Config:  aad.NewAuthCodeConfig(clientID, clientSecret, scopes),
+			checkStr(clientID, tenantID, clientSecret)
+			return &providers.OAuthAuthCode{
+				Config:  aad.NewAuthCodeConfig(clientID, tenantID, clientSecret, scopes),
 				SvcAddr: authSvcAddr,
 			}
 		case proxy.MethodOAuthDeviceFlow:
-			checkStr(clientID)
-			return &proxy.OAuthDeviceFlow{
-				Config: aad.NewDeviceFlowConfig(clientID, scopes),
+			checkStr(clientID, tenantID)
+			return &providers.OAuthDeviceFlow{
+				Config: aad.NewDeviceFlowConfig(clientID, tenantID, scopes),
 			}
 		case proxy.MethodBasicAuth:
 			fallthrough

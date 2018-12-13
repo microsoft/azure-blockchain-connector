@@ -7,6 +7,12 @@ import (
 	"strings"
 )
 
+type Provider interface {
+	RequestAccess() error
+	Client(params *Params) *http.Client
+	Modify(params *Params, req *http.Request)
+}
+
 type Proxy struct {
 	*Params
 	Provider Provider

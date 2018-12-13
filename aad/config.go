@@ -6,32 +6,24 @@ import (
 	"strings"
 )
 
-// Authorization Code Grant endpoint and config
-
-var AuthCodeEndpoint = oauth2.Endpoint{
-	AuthURL:  "https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize",
-	TokenURL: "https://login.microsoftonline.com/organizations/oauth2/v2.0/token",
-}
-
-func NewAuthCodeConfig(clientID, clientSecret, scopes string) *oauth2.Config {
+func NewAuthCodeConfig(clientID, tenantID, clientSecret, scopes string) *oauth2.Config {
 	return &oauth2.Config{
-		Endpoint:     AuthCodeEndpoint,
+		Endpoint: oauth2.Endpoint{
+			AuthURL:  "https://login.microsoftonline.com/" + tenantID + "/oauth2/v2.0/authorize",
+			TokenURL: "https://login.microsoftonline.com/" + tenantID + "/oauth2/v2.0/token",
+		},
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
 		Scopes:       strings.Split(scopes, " "),
 	}
 }
 
-// Device Flow Grant endpoint and config
-
-var DeviceFlowEndpoint = deviceflow.Endpoint{
-	DeviceCodeURL: "https://login.microsoftonline.com/organizations/oauth2/v2.0/devicecode",
-	TokenURL:      "https://login.microsoftonline.com/organizations/oauth2/v2.0/token",
-}
-
-func NewDeviceFlowConfig(clientID, scopes string) *deviceflow.Config {
+func NewDeviceFlowConfig(clientID, tenantID, scopes string) *deviceflow.Config {
 	return &deviceflow.Config{
-		Endpoint: DeviceFlowEndpoint,
+		Endpoint: deviceflow.Endpoint{
+			DeviceCodeURL: "https://login.microsoftonline.com/" + tenantID + "/oauth2/v2.0/devicecode",
+			TokenURL:      "https://login.microsoftonline.com/" + tenantID + "/oauth2/v2.0/token",
+		},
 		ClientID: clientID,
 		Scopes:   strings.Split(scopes, " "),
 	}
