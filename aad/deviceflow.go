@@ -16,10 +16,4 @@ func DeviceFlowGrant(ctx context.Context, conf *deviceflow.Config) (*deviceflow.
 	fmt.Println("Enter:", deviceAuth.UserCode)
 
 	return conf.Poll(ctx, deviceAuth)
-	//if err != nil {
-	//	fmt.Println(err)
-	//	return
-	//}
-	//fmt.Println("Token:", tok.AccessToken)
-	//fmt.Println("Expires in:", tok.ExpiresIn)
 }

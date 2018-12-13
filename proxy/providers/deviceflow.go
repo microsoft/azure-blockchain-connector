@@ -5,7 +5,6 @@ import (
 	"azure-blockchain-connector/aad/deviceflow"
 	"azure-blockchain-connector/proxy"
 	"context"
-	"fmt"
 	"net/http"
 )
 
@@ -18,10 +17,6 @@ func (df *OAuthDeviceFlow) RequestAccess() (err error) {
 	var ctx = context.Background()
 
 	tok, err := aad.DeviceFlowGrant(ctx, df.Config)
-	if tok != nil {
-		fmt.Println("Token:", tok.AccessToken)
-		fmt.Println("Expires in:", tok.ExpiresIn)
-	}
 	df.Token = tok
 	return
 }

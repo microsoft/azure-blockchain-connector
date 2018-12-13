@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"golang.org/x/oauth2"
+	"io"
 	"log"
 	"net/http"
 )
@@ -41,7 +42,8 @@ func AuthCodeGrant(ctx context.Context, conf *oauth2.Config, svcAddr string) (*o
 			return
 		}
 
-		//client := conf.Client(ctx, tok)
+		_, _ = io.WriteString(w, `<script>window.close()</script>`)
+
 		close(complete)
 	})
 
