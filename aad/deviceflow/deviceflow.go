@@ -61,6 +61,10 @@ func (c *Config) AuthDevice(ctx context.Context) (*DeviceAuth, error) {
 		return nil, err
 	}
 
+	if code := res.StatusCode; code < 200 || code > 299 {
+		return nil, errors.New("oauth2: deviceflow.AuthDevice: " + res.Status)
+	}
+
 	var da = &DeviceAuth{}
 	err = json.NewDecoder(res.Body).Decode(&da)
 	if err != nil {

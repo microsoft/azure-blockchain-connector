@@ -58,6 +58,13 @@ func newProxyFromFlags() *proxy.Proxy {
 
 	flag.Parse()
 
+	switch params.Method {
+	case proxy.MethodBasicAuth, proxy.MethodOAuthAuthCode, proxy.MethodOAuthDeviceFlow:
+	default:
+		fmt.Println("Unexpected method value. Expected: basic, authcode, device")
+		os.Exit(-1)
+	}
+
 	switch whenlogstr {
 	case proxy.LogWhenOnError, proxy.LogWhenOnNon200, proxy.LogWhenAlways:
 	default:
