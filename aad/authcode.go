@@ -2,6 +2,7 @@ package aad
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/google/uuid"
 	"golang.org/x/oauth2"
@@ -33,12 +34,15 @@ func AuthCodeGrant(ctx context.Context, conf *oauth2.Config, svcAddr string) (*o
 		// check state token to avoid CSRF
 		state := queries.Get("state")
 		if state != stateToken {
+			err = errors.New("oauth2: state token not the same")
+			close(complete)
 			return
 		}
 
 		// exchange authorization_code for access_token
 		tok, err = conf.Exchange(ctx, code)
 		if err != nil {
+			close(complete)
 			return
 		}
 
