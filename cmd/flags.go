@@ -29,16 +29,17 @@ func checkStr(ss ...string) {
 func newProxyFromFlags() *proxy.Proxy {
 	var params = &proxy.Params{}
 
-	flag.StringVar(&params.Method, "method", proxy.MethodBasicAuth, "AAD: Grant type if use AAD OAuth, 'authcode' for authorization code grant or 'device' for device flow grant.")
+	flag.StringVar(&params.Method, "method", proxy.MethodBasicAuth, "'basic' for basic auth, (AAD) 'authcode' for authorization code grant or 'device' for device flow grant. Default: basic")
 	flag.StringVar(&params.Local, "local", defaultLocalAddr, "Local address to bind to")
 	flag.StringVar(&params.Remote, "remote", "", "Remote endpoint address")
 
+	flag.StringVar(&params.CertPath, "cert", "", "(Optional) File path to root CA")
+	flag.BoolVar(&params.Insecure, "insecure", false, "Skip certificate verifications")
+
 	// basic auth
-	var ba = &providers.BasicAuth{}
-	flag.StringVar(&ba.CertPath, "cert", "", "(Optional) File path to root CA")
-	flag.BoolVar(&ba.Insecure, "insecure", false, "Skip certificate verifications")
-	flag.StringVar(&ba.Username, "username", "", "Basic auth: The username you want to login with")
-	flag.StringVar(&ba.Password, "password", "", "Basic auth: The password you want to login with")
+	var username, password string
+	flag.StringVar(&username, "username", "", "Basic auth: The username you want to login with")
+	flag.StringVar(&password, "password", "", "Basic auth: The password you want to login with")
 
 	// AAD OAuth
 	var clientID, tenantID, clientSecret, scopes, authSvcAddr string
@@ -76,8 +77,7 @@ func newProxyFromFlags() *proxy.Proxy {
 		params.Whatlog = proxy.LogWhatDetailed
 	}
 
-	return &proxy.Proxy{Params: params, Provider: func() proxy.Provider {
-
+	p := (func() proxy.Provider {
 		switch params.Method {
 		case proxy.MethodOAuthAuthCode:
 			checkStr(clientID, tenantID, clientSecret)
@@ -93,9 +93,17 @@ func newProxyFromFlags() *proxy.Proxy {
 		case proxy.MethodBasicAuth:
 			fallthrough
 		default:
-			ba.Remote = params.Remote
-			checkStr(ba.Remote, ba.Username, ba.Password)
-			return ba
+			checkStr(params.Remote, username, password)
+			return &providers.BasicAuth{
+				Remote:   params.Remote,
+				Username: username,
+				Password: password,
+			}
 		}
-	}()}
+	})()
+
+	return &proxy.Proxy{
+		Params:   params,
+		Provider: p,
+	}
 }

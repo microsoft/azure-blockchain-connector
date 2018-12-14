@@ -21,7 +21,7 @@ func (p *emptyProvider) RequestAccess() error {
 	return nil
 }
 
-func (p *emptyProvider) Client(params *Params) *http.Client {
+func (p *emptyProvider) Client() *http.Client {
 	return p.c
 }
 

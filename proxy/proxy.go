@@ -2,13 +2,16 @@ package proxy
 
 import (
 	"bytes"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strings"
 )
 
 const (
-	MethodBasicAuth       = ""
+	MethodBasicAuth       = "basic"
 	MethodOAuthAuthCode   = "authcode"
 	MethodOAuthDeviceFlow = "device"
 
@@ -26,13 +29,16 @@ type Params struct {
 	Remote string
 	Method string
 
+	CertPath string
+	Insecure bool
+
 	Whenlog string
 	Whatlog string
 }
 
 type Provider interface {
 	RequestAccess() error
-	Client(params *Params) *http.Client
+	Client() *http.Client
 	Modify(params *Params, req *http.Request)
 }
 
@@ -41,8 +47,6 @@ type Proxy struct {
 	Provider Provider
 }
 
-// todo: more error handling
-// todo: variable names
 func (p *Proxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	var params = p.Params
 
@@ -77,7 +81,7 @@ func (p *Proxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	}(logStrBuilder, &logFlag)
 
 	buf := new(bytes.Buffer)
-	buf.ReadFrom(req.Body)
+	_, _ = buf.ReadFrom(req.Body)
 
 	req.URL.Host = params.Remote
 	req.URL.Scheme = "https"
@@ -101,7 +105,7 @@ func (p *Proxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	//req1.SetBasicAuth(params.Username, params.Password)
 
 	// do request and get response
-	response, err := p.Provider.Client(params).Do(req1)
+	response, err := p.Provider.Client().Do(req1)
 	if err != nil {
 		logStrBuilder.WriteString(fmt.Sprintln("Error when send the transport request:\n", err))
 		return
@@ -109,7 +113,7 @@ func (p *Proxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	defer response.Body.Close()
 
 	buf = new(bytes.Buffer)
-	buf.ReadFrom(response.Body)
+	_, _ = buf.ReadFrom(response.Body)
 
 	logStrBuilder.WriteString(fmt.Sprintln("Response Status Code:", response.StatusCode))
 	if params.Whatlog >= LogWhatDetailed {
@@ -117,7 +121,7 @@ func (p *Proxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	rw.WriteHeader(response.StatusCode)
-	rw.Write(buf.Bytes())
+	_, _ = rw.Write(buf.Bytes())
 
 	//Set completeFlag to indicate that the response construction finished
 	completeFlag = true
@@ -130,5 +134,33 @@ func (p *Proxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		if response.StatusCode == 200 {
 			logFlag = false
 		}
+	}
+}
+
+func mustReadPem(path string) []byte {
+	if path == "" {
+		return []byte("")
+	}
+	pem, err := ioutil.ReadFile(path)
+	if err != nil {
+		fmt.Println("ReadFile err:", err)
+	}
+	return pem
+}
+
+func (p *Proxy) ConfigureClient() {
+	pool := x509.NewCertPool()
+	pool.AppendCertsFromPEM(mustReadPem(p.Params.CertPath))
+
+	c := p.Provider.Client()
+	if c.Transport == nil {
+		c.Transport = &http.Transport{}
+	}
+	if t, ok := c.Transport.(*http.Transport); ok {
+		t.TLSClientConfig = &tls.Config{
+			RootCAs:            pool,
+			InsecureSkipVerify: p.Params.Insecure,
+		}
+		t.MaxIdleConnsPerHost = 1024
 	}
 }

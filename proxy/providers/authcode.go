@@ -23,11 +23,11 @@ func (ac *OAuthAuthCode) RequestAccess() error {
 	}
 	ac.client = ac.Config.Client(ctx, tok)
 	ac.token = tok
-	
+
 	return nil
 }
 
-func (ac *OAuthAuthCode) Client(params *proxy.Params) *http.Client {
+func (ac *OAuthAuthCode) Client() *http.Client {
 	return ac.client
 }
 

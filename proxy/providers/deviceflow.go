@@ -10,21 +10,22 @@ import (
 
 type OAuthDeviceFlow struct {
 	*deviceflow.Config
-	Token *deviceflow.Token
+	token  *deviceflow.Token
+	client *http.Client
 }
 
 func (df *OAuthDeviceFlow) RequestAccess() (err error) {
 	var ctx = context.Background()
 
 	tok, err := aad.DeviceFlowGrant(ctx, df.Config)
-	df.Token = tok
+	df.token = tok
 	return
 }
 
-func (df *OAuthDeviceFlow) Client(params *proxy.Params) *http.Client {
-	return http.DefaultClient
+func (df *OAuthDeviceFlow) Client() *http.Client {
+	return df.client
 }
 
 func (df *OAuthDeviceFlow) Modify(params *proxy.Params, req *http.Request) {
-	req.Header.Set("Authorization", "Bearer"+" "+df.Token.AccessToken)
+	req.Header.Set("Authorization", "Bearer"+" "+df.token.AccessToken)
 }

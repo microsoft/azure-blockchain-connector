@@ -67,7 +67,7 @@ func (ba *BasicAuth) RequestAccess() error {
 	return err
 }
 
-func (ba *BasicAuth) Client(params *proxy.Params) *http.Client {
+func (ba *BasicAuth) Client() *http.Client {
 	return ba.client
 }
 
