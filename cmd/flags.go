@@ -15,6 +15,7 @@ const (
 	// Do not use oauth grant means using basic auth
 )
 
+// cli argument for getting auth code with webview, used internally
 const flagAuthCodeWebview = "authcode-webview"
 
 // checkStr checks if the str is "", then print flag.Usage to ask the user.

@@ -80,6 +80,10 @@ func AuthCodeGrant(ctx context.Context, conf *oauth2.Config, svcAddr string) (*o
 	}
 }
 
+// todo: modify the condition for getting the code and state, current method is dangerous
+// todo: window flashing past for an logged-in users
+// todo: timeout settings
+// AuthCodeWebview opens a webview window with authURL, and detects the redirect URL to get auth code and state.
 func AuthCodeWebview(authURL string) {
 	complete := false
 	href := stringChange("")
@@ -111,6 +115,9 @@ func AuthCodeWebview(authURL string) {
 	w.Run()
 }
 
+// todo: name need to be changed
+// todo: move to proxy package
+// frame will exec command to fetch the auth code from given authURL and state.
 func frame(authURL string, stateToken string, flagName string) (string, error) {
 	pth, err := os.Executable()
 	if err != nil {
@@ -138,6 +145,8 @@ func frame(authURL string, stateToken string, flagName string) (string, error) {
 	return code, err
 }
 
+// todo: move to proxy package
+// AuthCodeGrantWithFrame use a webview window to help users to complete authorization.
 func AuthCodeGrantWithFrame(ctx context.Context, conf *oauth2.Config, flagName string) (*oauth2.Token, error) {
 	authUrl := conf.AuthCodeURL(stateToken, oauth2.AccessTypeOffline)
 
