@@ -5,14 +5,24 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/zserge/webview"
 	"golang.org/x/oauth2"
 	"io"
 	"log"
 	"net/http"
+	"net/url"
+	"os"
+	"os/exec"
+	"strings"
+	"time"
 )
 
 var stateToken = uuid.New().String()
 
+// AuthCodeGrant prints the authorization url to stdio and the user need to click the url to perform a grant.
+// This method listen to a port to receive the callback of the code and the state token from the server.
+// Then, it will terminate the server and returns received token values.
+// The browser window will also be closed(via window.close()) immediately after getting the information required.
 func AuthCodeGrant(ctx context.Context, conf *oauth2.Config, svcAddr string) (*oauth2.Token, error) {
 
 	authUrl := conf.AuthCodeURL(stateToken, oauth2.AccessTypeOffline)
@@ -68,4 +78,75 @@ func AuthCodeGrant(ctx context.Context, conf *oauth2.Config, svcAddr string) (*o
 	case err := <-srvErr:
 		return nil, err
 	}
+}
+
+func AuthCodeWebview(authURL string) {
+	complete := false
+	href := stringChange("")
+	w := webview.New(webview.Settings{
+		Title:     "Authorization",
+		Width:     800,
+		Height:    600,
+		URL:       authURL,
+		Resizable: true,
+		ExternalInvokeCallback: func(w webview.WebView, data string) {
+			if href.Changed(data) {
+				complete = true
+				fmt.Println(data)
+				w.Terminate()
+			}
+		},
+	})
+
+	defer w.Exit()
+
+	go func(fin *bool) {
+		for !complete {
+			w.Dispatch(func() {
+				_ = w.Eval(`window.external.invoke(window.location.href)`)
+			})
+			time.Sleep(time.Second)
+		}
+	}(&complete)
+	w.Run()
+}
+
+func frame(authURL string, stateToken string, flagName string) (string, error) {
+	pth, err := os.Executable()
+	if err != nil {
+		return "", err
+	}
+	arg := strings.Join([]string{"-", flagName, "=", authURL}, "")
+	out, err := exec.Command(pth, arg).Output()
+
+	callbackURL := string(out)
+	u, err := url.Parse(callbackURL)
+	if err != nil {
+		return "", err
+	}
+	values := u.Query()
+
+	code := values.Get("code")
+
+	// check state token to avoid CSRF
+	state := values.Get("state")
+	if state != stateToken {
+		err = errors.New("oauth2: state token not the same")
+		return "", err
+	}
+
+	return code, err
+}
+
+func AuthCodeGrantWithFrame(ctx context.Context, conf *oauth2.Config, flagName string) (*oauth2.Token, error) {
+	authUrl := conf.AuthCodeURL(stateToken, oauth2.AccessTypeOffline)
+
+	code, err := frame(authUrl, stateToken, flagName)
+	if err != nil {
+		return nil, err
+	}
+
+	// exchange authorization_code for access_token
+	tok, err := conf.Exchange(ctx, code)
+	return tok, err
 }

@@ -1,11 +1,14 @@
 package main
 
 import (
+	"azure-blockchain-connector/aad"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 )
 
@@ -36,7 +39,26 @@ func whenCancelling(fn func()) chan struct{} {
 	return c
 }
 
+func needWebviewForAuthCode() bool {
+	for _, arg := range os.Args[1:] {
+		if strings.Contains(arg, flagAuthCodeWebview) {
+			return true
+		}
+	}
+	return false
+}
+
 func main() {
+
+	if needWebviewForAuthCode() {
+		var authURL string
+		flag.StringVar(&authURL, flagAuthCodeWebview, "", "")
+		flag.Parse()
+
+		aad.AuthCodeWebview(authURL)
+		return
+	}
+
 	c := whenCancelling(nil)
 
 	p := newProxyFromFlags()

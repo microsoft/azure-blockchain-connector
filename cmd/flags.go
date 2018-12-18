@@ -15,6 +15,8 @@ const (
 	// Do not use oauth grant means using basic auth
 )
 
+const flagAuthCodeWebview = "authcode-webview"
+
 // checkStr checks if the str is "", then print flag.Usage to ask the user.
 // Keep the same exit code -1 with the former implementation.
 func checkStr(ss ...string) {
@@ -42,11 +44,12 @@ func newProxyFromFlags() *proxy.Proxy {
 	flag.StringVar(&password, "password", "", "Basic auth: The password you want to login with")
 
 	// AAD OAuth
-	var clientID, tenantID, clientSecret, scopes, authSvcAddr string
+	var clientID, tenantID, clientSecret, authSvcAddr string
+	var scopes string
 	flag.StringVar(&clientID, "client-id", "", "AAD: Application (client) ID")
 	flag.StringVar(&tenantID, "tenant-id", "", "AAD: Directory (tenant) ID")
 	flag.StringVar(&clientSecret, "client-secret", "", "AAD: Client Secret, required when grant type is 'authcode'")
-	flag.StringVar(&scopes, "scopes", "", "AAD: Scope, should be a space-delimiter string")
+	//flag.StringVar(&scopes, "scopes", "", "AAD: Scope, should be a space-delimiter string")
 	flag.StringVar(&authSvcAddr, "svc-addr", defaultAuthSvcAddr, "Should be consistent with AAD redirect config")
 
 	var whenlogstr string
@@ -57,6 +60,9 @@ func newProxyFromFlags() *proxy.Proxy {
 	flag.BoolVar(&debugmode, "debugmode", false, "Open debug mode. It will set whenlog to always and whatlog to detailed, and original settings for whenlog and whatlog are covered.")
 
 	flag.Parse()
+
+	// hard code scopes
+	scopes = "offline_access api://285286f5-b97b-4b45-ba35-92a74f35756a/basic"
 
 	switch params.Method {
 	case proxy.MethodBasicAuth, proxy.MethodOAuthAuthCode, proxy.MethodOAuthDeviceFlow:
@@ -87,10 +93,12 @@ func newProxyFromFlags() *proxy.Proxy {
 	p := (func() proxy.Provider {
 		switch params.Method {
 		case proxy.MethodOAuthAuthCode:
-			checkStr(clientID, tenantID, clientSecret)
+			checkStr(clientID, tenantID)
+			//clientSecret = ""
 			return &providers.OAuthAuthCode{
 				Config:  aad.NewAuthCodeConfig(clientID, tenantID, clientSecret, scopes),
 				SvcAddr: authSvcAddr,
+				ArgName: flagAuthCodeWebview,
 			}
 		case proxy.MethodOAuthDeviceFlow:
 			checkStr(clientID, tenantID)

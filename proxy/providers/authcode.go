@@ -11,13 +11,15 @@ import (
 type OAuthAuthCode struct {
 	*oauth2.Config
 	SvcAddr string
+	ArgName string
 	token   *oauth2.Token
 	client  *http.Client
 }
 
 func (ac *OAuthAuthCode) RequestAccess() error {
 	ctx := context.Background()
-	tok, err := aad.AuthCodeGrant(ctx, ac.Config, ac.SvcAddr)
+
+	tok, err := aad.AuthCodeGrantWithFrame(ctx, ac.Config, ac.ArgName)
 	if err != nil {
 		return err
 	}
