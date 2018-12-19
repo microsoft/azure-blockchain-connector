@@ -59,7 +59,7 @@ func main() {
 		flag.StringVar(&authURL, flagAuthCodeWebview, "", "")
 		flag.Parse()
 
-		aad.AuthCodeWebview(authURL)
+		aad.AuthCodeWebview(authURL, os.Stdout)
 		return
 	}
 
