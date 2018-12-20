@@ -1,11 +1,14 @@
 FROM golang:1.11 AS build
+RUN apt-get update
+RUN apt-get install libwebkit2gtk-4.0-dev -y
 WORKDIR /src
 COPY ./go.mod ./go.sum ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o connector ./cmd
+ENV GO111MODULE=on
+RUN GOOS=linux go build -o connector ./cmd
 
-FROM ubuntu:16.04 AS ca-store
+FROM ubuntu:16.04 AS ca-stores
 RUN apt-get update -y
 RUN apt-get install -y ca-certificates curl
 RUN update-ca-certificates -v

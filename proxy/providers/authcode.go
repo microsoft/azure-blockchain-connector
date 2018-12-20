@@ -19,7 +19,8 @@ type OAuthAuthCode struct {
 func (ac *OAuthAuthCode) RequestAccess() error {
 	ctx := context.Background()
 
-	tok, err := aad.AuthCodeGrantWithFrame(ctx, ac.Config, ac.ArgName)
+	tok, err := aad.AuthCodeGrantWebview(ctx, ac.Config, ac.ArgName)
+	//tok, err := aad.AuthCodeGrantServer(ctx, ac.Config, ac.SvcAddr)
 	if err != nil {
 		return err
 	}
