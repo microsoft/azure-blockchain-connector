@@ -22,23 +22,6 @@ const (
 	scriptCountdown    = `var cnt=document.querySelector("#cnt");if(cnt)var timer=setInterval(function(){var a=parseInt(cnt.innerHTML);a-=1,cnt.innerHTML=""+a,0>=a&&clearInterval(timer)},1e3);`
 )
 
-// fnRequestAuthCode represents the process of visiting a URL to get authorization code.
-type fnRequestAuthCode func(authURL, stateToken string) (string, error)
-
-// authCodeGrant returns an oauth2 token type with customizable code fetching process.
-func authCodeGrant(ctx context.Context, conf *oauth2.Config, fn fnRequestAuthCode) (*oauth2.Token, error) {
-	stateToken := newStateToken()
-	authUrl := conf.AuthCodeURL(stateToken, oauth2.AccessTypeOffline)
-
-	code, err := fn(authUrl, stateToken)
-	if err != nil {
-		return nil, err
-	}
-
-	tok, err := conf.Exchange(ctx, code)
-	return tok, err
-}
-
 // AuthCodeWebview opens a window for grant operations. Once authorized, it writes the code to the writer.
 func AuthCodeWebview(authURL string, out io.Writer) {
 	complete := false
@@ -57,7 +40,7 @@ func AuthCodeWebview(authURL string, out io.Writer) {
 			u, _ := url.Parse(data)
 
 			// detect condition: if the querystring includes a code field
-			if u.Query().Get("code") == "" {
+			if u.Query().Get("code") == "" || u.Query().Get("error") == "" {
 				return
 			}
 

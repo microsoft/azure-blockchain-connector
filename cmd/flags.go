@@ -95,7 +95,6 @@ func newProxyFromFlags() *proxy.Proxy {
 		switch params.Method {
 		case proxy.MethodOAuthAuthCode:
 			checkStr(clientID, tenantID)
-			//clientSecret = ""
 			return &providers.OAuthAuthCode{
 				Config:  aad.NewAuthCodeConfig(clientID, tenantID, clientSecret, scopes),
 				SvcAddr: authSvcAddr,
