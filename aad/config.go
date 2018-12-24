@@ -9,9 +9,9 @@ import (
 type EndpointBase string
 
 const (
-	EndpointAuthorize   = "https://login.microsoftonline.com/<tenant id>/oauth2/v2.0/authorize"
-	EndpointToken       = "https://login.microsoftonline.com/<tenant id>/oauth2/v2.0/token"
-	EndpointDeviceCode  = "https://login.microsoftonline.com/<tenant id>/oauth2/v2.0/devicecode"
+	EndpointAuthorize   = "https://login.microsoftonline.com/<tenant id>/oauth2/authorize"
+	EndpointToken       = "https://login.microsoftonline.com/<tenant id>/oauth2/token"
+	EndpointDeviceCode  = "https://login.microsoftonline.com/<tenant id>/oauth2/devicecode"
 	TenantCommon        = "common"
 	TenantOrganizations = "organizations"
 )

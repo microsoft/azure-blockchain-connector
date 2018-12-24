@@ -10,16 +10,24 @@ import (
 
 type OAuthAuthCode struct {
 	*oauth2.Config
-	SvcAddr string
-	ArgName string
-	client  *http.Client
+	UseWebview bool
+	SvcAddr    string
+	ArgName    string
+	client     *http.Client
 }
 
 func (ac *OAuthAuthCode) RequestAccess() error {
 	ctx := context.Background()
 
-	tok, err := aad.AuthCodeGrantWebview(ctx, ac.Config, ac.ArgName)
-	//tok, err := aad.AuthCodeGrantServer(ctx, ac.Config, ac.SvcAddr)
+	var tok *oauth2.Token
+	var err error
+
+	if ac.UseWebview {
+		tok, err = aad.AuthCodeGrantWebview(ctx, ac.Config, ac.ArgName)
+	} else {
+		tok, err = aad.AuthCodeGrantServer(ctx, ac.Config, ac.SvcAddr)
+	}
+
 	if err != nil {
 		return err
 	}

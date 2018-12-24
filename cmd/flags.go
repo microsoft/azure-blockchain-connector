@@ -14,8 +14,7 @@ import (
 )
 
 const (
-	defaultLocalAddr   = "127.0.0.1:3100"
-	defaultAuthSvcAddr = "127.0.0.1:3101"
+	defaultLocalAddr = "127.0.0.1:3100"
 	// Do not use oauth grant means using basic auth
 )
 
@@ -36,32 +35,35 @@ func checkStr(ss ...string) {
 func newProxyFromFlags() *proxy.Proxy {
 	var params = &proxy.Params{}
 
-	flag.StringVar(&params.Method, "method", proxy.MethodBasicAuth, "'basic' for basic auth, 'authcode' for authorization code grant, 'client' for client credentials grant, 'device' for device flow grant. Default: basic")
+	flag.StringVar(&params.Method, "method", proxy.MethodBasicAuth, "Authentication method. Basic auth (basic), authorization code (authcode), client credentials (client) and device flow(device)")
 	flag.StringVar(&params.Local, "local", defaultLocalAddr, "Local address to bind to")
 	flag.StringVar(&params.Remote, "remote", "", "Remote endpoint address")
 
 	flag.StringVar(&params.CertPath, "cert", "", "(Optional) File path to root CA")
-	flag.BoolVar(&params.Insecure, "insecure", false, "Skip certificate verifications")
+	flag.BoolVar(&params.Insecure, "insecure", false, "(Optional) Skip certificate verifications")
 
 	// basic auth
 	var username, password string
-	flag.StringVar(&username, "username", "", "Basic auth: The username you want to login with")
-	flag.StringVar(&password, "password", "", "Basic auth: The password you want to login with")
+	flag.StringVar(&username, "username", "", "Basic auth: username")
+	flag.StringVar(&password, "password", "", "Basic auth: password")
 
 	// AAD OAuth
-	var clientID, tenantID, clientSecret, authSvcAddr string
-	//var scopesString string
-	flag.StringVar(&clientID, "client-id", "", "AAD: Application (client) ID")
-	flag.StringVar(&tenantID, "tenant-id", "", "AAD: Directory (tenant) ID")
-	flag.StringVar(&clientSecret, "client-secret", "", "AAD: Client Secret, required when grant type is 'authcode'")
-	//flag.StringVar(&scopesString, "scopes", "", "AAD: Scope, should be a space-delimiter string")
-	flag.StringVar(&authSvcAddr, "svc-addr", defaultAuthSvcAddr, "Should be consistent with AAD redirect config")
+	var (
+		clientID, tenantID, clientSecret string
+		useWebview                       bool
+		authSvcAddr                      string
+	)
+	flag.StringVar(&clientID, "client-id", "", "OAuth: application (client) ID")
+	flag.StringVar(&tenantID, "tenant-id", "", "OAuth: directory (tenant) ID")
+	flag.StringVar(&clientSecret, "client-secret", "", "OAuth: client secret")
+	flag.BoolVar(&useWebview, "webview", true, "OAuth: open a webview o to receive callbacks, applicable for Windows/macOS")
+	flag.StringVar(&authSvcAddr, "authcode-addr", defaultLocalAddr, "OAuth: local address to receive callbacks")
 
 	var whenlogstr string
 	var whatlogstr string
 	var debugmode bool
-	flag.StringVar(&whenlogstr, "whenlog", proxy.LogWhenOnError, "Configuration about in what cases logs should be prited. Alternatives: always, onNon200 and onError. Default: onError")
-	flag.StringVar(&whatlogstr, "whatlog", proxy.LogWhatBasic, "Configuration about what information should be included in logs. Alternatives: basic and detailed. Default: basic")
+	flag.StringVar(&whenlogstr, "whenlog", proxy.LogWhenOnError, "Configuration about in what cases logs should be prited. Alternatives: always, onNon200 and onError")
+	flag.StringVar(&whatlogstr, "whatlog", proxy.LogWhatBasic, "Configuration about what information should be included in logs. Alternatives: basic and detailed")
 	flag.BoolVar(&debugmode, "debugmode", false, "Open debug mode. It will set whenlog to always and whatlog to detailed, and original settings for whenlog and whatlog are covered.")
 
 	flag.Parse()
@@ -102,20 +104,23 @@ func newProxyFromFlags() *proxy.Proxy {
 		scopes = []string{"https://graph.microsoft.com/.default"}
 	}
 
-	// hard code redirect URL settings for different OS type
-	var redirectURL string
-	switch runtime.GOOS {
-	case "windows":
-		// mshtml will throw an error for "urn:ietf:wg:oauth:2.0:oob"
-		redirectURL = "https://login.microsoftonline.com/common/oauth2/nativeclient"
-	case "darwin":
-		// macOS webview may start a download for "https://login.microsoftonline.com/common/oauth2/nativeclient"
-		// which cannot be fixed now.
-		// todo: macOS redirectURL: check if works
-		redirectURL = "urn:ietf:wg:oauth:2.0:oob"
-	case "linux":
-		fallthrough
-	default:
+	var redirectURL = aad.CallbackPath(authSvcAddr)
+	// hard code redirect URL settings for different OS webviews
+	if useWebview {
+		switch runtime.GOOS {
+		case "windows":
+			// mshtml will throw an error for "urn:ietf:wg:oauth:2.0:oob"
+			redirectURL = "https://login.microsoftonline.com/common/oauth2/nativeclient"
+		case "darwin":
+			// macOS webview may start a download for "https://login.microsoftonline.com/common/oauth2/nativeclient"
+			// which cannot be fixed now.
+			// todo: macOS redirectURL: check if works
+			redirectURL = "urn:ietf:wg:oauth:2.0:oob"
+		case "linux":
+			fallthrough
+		default:
+			useWebview = false
+		}
 	}
 
 	checkStr(params.Local, params.Remote)
@@ -132,8 +137,9 @@ func newProxyFromFlags() *proxy.Proxy {
 					Scopes:       scopes,
 					RedirectURL:  redirectURL,
 				},
-				SvcAddr: authSvcAddr,
-				ArgName: flagAuthCodeWebview,
+				UseWebview: useWebview,
+				SvcAddr:    authSvcAddr,
+				ArgName:    flagAuthCodeWebview,
 			}
 		case proxy.MethodOAuthClientCredentials:
 			checkStr(clientID, clientSecret)

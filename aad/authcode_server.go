@@ -9,6 +9,15 @@ import (
 	"net/http"
 )
 
+const (
+	PathAuthCodeAuth     = "/_click_to_auth"
+	PathAuthCodeCallback = "/_callback"
+)
+
+func CallbackPath(addr string) string {
+	return addr + PathAuthCodeCallback
+}
+
 // AuthCodeGrantWithServer prints the authorization url to stdio and the user need to click the url to perform a grant.
 // This method listen to a port to receive the callback of the code and the state token from the server.
 // Then, it will terminate the server and returns received token values.
@@ -17,20 +26,19 @@ func AuthCodeGrantServer(ctx context.Context, conf *oauth2.Config, svcAddr strin
 
 	stateToken := newStateToken()
 	authUrl := conf.AuthCodeURL(stateToken, oauth2.AccessTypeOffline)
-	fmt.Println("Authorize:", "http://"+svcAddr+"/authorization")
+	fmt.Println("Authorize:", "http://"+svcAddr+PathAuthCodeAuth)
 
 	fmt.Println(authUrl)
 
 	mux := http.NewServeMux()
 	srv := &http.Server{Addr: svcAddr, Handler: mux}
 
-	mux.Handle("/", http.RedirectHandler("/authorization", http.StatusSeeOther))
-	mux.Handle("/authorization", http.RedirectHandler(authUrl, http.StatusSeeOther))
+	mux.Handle(PathAuthCodeAuth, http.RedirectHandler(authUrl, http.StatusSeeOther))
 
 	complete := make(chan struct{})
 	var tok *oauth2.Token
 	var err error
-	mux.HandleFunc("/authorization/callback", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc(PathAuthCodeCallback, func(w http.ResponseWriter, r *http.Request) {
 		code, err := resolveCallback(r.URL.RawQuery, stateToken)
 
 		// exchange authorization_code for access_token
