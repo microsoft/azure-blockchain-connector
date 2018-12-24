@@ -74,7 +74,7 @@ func main() {
 	go func() {
 		check(http.ListenAndServe(p.Local, p))
 	}()
-	fmt.Println("Tunneling:", p.Local, "->", p.Remote)
+	fmt.Println("Tunnel:", p.Local, "->", p.Remote)
 
 	<-c
 }

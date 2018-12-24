@@ -11,9 +11,10 @@ import (
 )
 
 const (
-	MethodBasicAuth       = "basic"
-	MethodOAuthAuthCode   = "authcode"
-	MethodOAuthDeviceFlow = "device"
+	MethodBasicAuth              = "basic"
+	MethodOAuthAuthCode          = "authcode"
+	MethodOAuthDeviceFlow        = "device"
+	MethodOAuthClientCredentials = "client"
 
 	LogWhenOnError  = "onError"  // print log only for those who raise exceptions
 	LogWhenOnNon200 = "onNon200" // print log for those who have a non-200 response, or those who raise exceptions

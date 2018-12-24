@@ -40,7 +40,7 @@ func AuthCodeWebview(authURL string, out io.Writer) {
 			u, _ := url.Parse(data)
 
 			// detect condition: if the querystring includes a code field
-			if u.Query().Get("code") == "" || u.Query().Get("error") == "" {
+			if u.Query().Get("code") == "" && u.Query().Get("error") == "" {
 				return
 			}
 

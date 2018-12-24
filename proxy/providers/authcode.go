@@ -12,7 +12,6 @@ type OAuthAuthCode struct {
 	*oauth2.Config
 	SvcAddr string
 	ArgName string
-	token   *oauth2.Token
 	client  *http.Client
 }
 
@@ -25,7 +24,6 @@ func (ac *OAuthAuthCode) RequestAccess() error {
 		return err
 	}
 	ac.client = ac.Config.Client(ctx, tok)
-	ac.token = tok
 
 	return nil
 }
