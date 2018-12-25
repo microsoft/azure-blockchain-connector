@@ -11,6 +11,7 @@ import (
 	"golang.org/x/oauth2/clientcredentials"
 	"os"
 	"runtime"
+	"strings"
 )
 
 const (
@@ -23,9 +24,13 @@ const flagAuthCodeWebview = "authcode-webview"
 
 // checkStr checks if the str is "", then print flag.Usage to ask the user.
 // Keep the same exit code -1 with the former implementation.
-func checkStr(ss ...string) {
-	for _, s := range ss {
+func checkStr(namesStr string, ss ...string) {
+	names := strings.Split(namesStr, " ")
+	for i, s := range ss {
 		if s == "" {
+			if i < len(names) {
+				fmt.Printf("Error: param '%s' is required for the current method.\n", names[i])
+			}
 			flag.Usage()
 			os.Exit(-1)
 		}
@@ -106,29 +111,25 @@ func newProxyFromFlags() *proxy.Proxy {
 
 	var redirectURL = aad.CallbackPath(authSvcAddr)
 	// hard code redirect URL settings for different OS webviews
+	// "urn:ietf:wg:oauth:2.0:oob": webviews do not support the protocol
+	// webkit(macOS): visit "nativeclient" start a download automatically
 	if useWebview {
 		switch runtime.GOOS {
 		case "windows":
-			// mshtml will throw an error for "urn:ietf:wg:oauth:2.0:oob"
 			redirectURL = "https://login.microsoftonline.com/common/oauth2/nativeclient"
-		case "darwin":
-			// macOS webview may start a download for "https://login.microsoftonline.com/common/oauth2/nativeclient"
-			// which cannot be fixed now.
-			// todo: macOS redirectURL: check if works
-			redirectURL = "urn:ietf:wg:oauth:2.0:oob"
-		case "linux":
+		case "darwin", "linux":
 			fallthrough
 		default:
 			useWebview = false
 		}
 	}
 
-	checkStr(params.Local, params.Remote)
+	checkStr("local remote", params.Local, params.Remote)
 
 	p := (func() proxy.Provider {
 		switch params.Method {
 		case proxy.MethodOAuthAuthCode:
-			checkStr(clientID, tenantID)
+			checkStr("client-id tenant-id", clientID, tenantID)
 			return &providers.OAuthAuthCode{
 				Config: &oauth2.Config{
 					Endpoint:     aad.AuthCodeEndpoint(tenantID),
@@ -142,7 +143,7 @@ func newProxyFromFlags() *proxy.Proxy {
 				ArgName:    flagAuthCodeWebview,
 			}
 		case proxy.MethodOAuthClientCredentials:
-			checkStr(clientID, clientSecret)
+			checkStr("client-id client-secret", clientID, clientSecret)
 			return &providers.OAuthClientCredentials{
 				Config: &clientcredentials.Config{
 					ClientID:       clientID,
@@ -153,7 +154,7 @@ func newProxyFromFlags() *proxy.Proxy {
 				},
 			}
 		case proxy.MethodOAuthDeviceFlow:
-			checkStr(clientID, tenantID)
+			checkStr("client-id tenant-id", clientID, tenantID)
 			return &providers.OAuthDeviceFlow{
 				Config: &deviceflow.Config{
 					Endpoint: aad.DeviceFlowEndpoint(tenantID),
@@ -164,7 +165,7 @@ func newProxyFromFlags() *proxy.Proxy {
 		case proxy.MethodBasicAuth:
 			fallthrough
 		default:
-			checkStr(params.Remote, username, password)
+			checkStr("username password", username, password)
 			return &providers.BasicAuth{
 				Remote:   params.Remote,
 				Username: username,
