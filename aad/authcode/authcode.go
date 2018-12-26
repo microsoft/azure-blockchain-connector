@@ -18,21 +18,20 @@ func newStateToken() string {
 
 // resolveCallback returns the code field of a query string.
 func resolveCallback(query string, state string) (string, error) {
-
 	values, err := url.ParseQuery(query)
 	if err != nil {
 		return "", err
-	}
-
-	errName := values.Get("error")
-	if errName != "" {
-		return "", errors.New("oauth2: server: " + errName)
 	}
 
 	// check state token to avoid CSRF
 	if values.Get("state") != state {
 		err = errors.New("oauth2: state token not the same")
 		return "", err
+	}
+
+	errName := values.Get("error")
+	if errName != "" {
+		return "", errors.New("oauth2: server: " + errName + "\n" + values.Get("error_description"))
 	}
 
 	return values.Get("code"), err

@@ -1,12 +1,12 @@
 package aad
 
 import (
-	"azure-blockchain-connector/aad/deviceflow"
+	"azure-blockchain-connector/aad/oauth2/devicecode"
 	"context"
 	"fmt"
 )
 
-func DeviceFlowGrant(ctx context.Context, conf *deviceflow.Config) (*deviceflow.Token, error) {
+func DeviceFlowGrant(ctx context.Context, conf *devicecode.Config) (*devicecode.Token, error) {
 
 	deviceAuth, err := conf.AuthDevice(ctx)
 	if err != nil {

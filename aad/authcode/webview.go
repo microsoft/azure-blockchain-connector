@@ -22,6 +22,8 @@ const (
 	scriptCountdown    = `var cnt=document.querySelector("#cnt");if(cnt)var timer=setInterval(function(){var a=parseInt(cnt.innerHTML);a-=1,cnt.innerHTML=""+a,0>=a&&clearInterval(timer)},1e3);`
 )
 
+const DefaultWebviewFlag = "authcode-webview"
+
 // AuthCodeWebview opens a window for grant operations. Once authorized, it writes the code to the writer.
 func Webview(authURL string, out io.Writer) {
 	complete := false
@@ -79,6 +81,10 @@ func requestAuthCodeWebview(authURL string, state string, flagName string) (code
 	if err != nil {
 		return
 	}
+
+	if flagName == "" {
+		flagName = DefaultWebviewFlag
+	}
 	arg := strings.Join([]string{"-", flagName, "=", authURL}, "")
 
 	cmd := exec.Command(pth, arg)
@@ -94,6 +100,9 @@ func requestAuthCodeWebview(authURL string, state string, flagName string) (code
 	scanner := bufio.NewScanner(out)
 	scanner.Scan()
 	query, err := scanner.Text(), scanner.Err()
+	if err != nil {
+		return
+	}
 
 	return resolveCallback(query, state)
 }

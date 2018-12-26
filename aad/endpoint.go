@@ -1,7 +1,7 @@
 package aad
 
 import (
-	"azure-blockchain-connector/aad/deviceflow"
+	"azure-blockchain-connector/aad/oauth2/devicecode"
 	"golang.org/x/oauth2"
 	"strings"
 )
@@ -9,16 +9,16 @@ import (
 type EndpointBase string
 
 const (
-	//EndpointAuthorize            = "https://login.windows-ppe.net/<tenant id>/oauth2/authorize"
-	//EndpointToken                = "https://login.windows-ppe.net/<tenant id>/oauth2/token"
-	//EndpointDeviceCode           = "https://login.windows-ppe.net/<tenant id>/oauth2/devicecode"
-	//EndpointRedirectNativeClient = "https://login.windows-ppe.net/common/oauth2/nativeclient"
-	EndpointAuthorize            = "https://login.microsoftonline.com/<tenant id>/oauth2/authorize"
-	EndpointToken                = "https://login.microsoftonline.com/<tenant id>/oauth2/token"
-	EndpointDeviceCode           = "https://login.microsoftonline.com/<tenant id>/oauth2/devicecode"
-	EndpointRedirectNativeClient = "https://login.microsoftonline.com/common/oauth2/nativeclient"
-	TenantCommon                 = "common"
-	TenantOrganizations          = "organizations"
+	EndpointAuthorize            = "https://login.windows-ppe.net/<tenant id>/oauth2/authorize"
+	EndpointToken                = "https://login.windows-ppe.net/<tenant id>/oauth2/token"
+	EndpointDeviceCode           = "https://login.windows-ppe.net/<tenant id>/oauth2/devicecode"
+	EndpointRedirectNativeClient = "https://login.windows-ppe.net/common/oauth2/nativeclient"
+	//EndpointAuthorize            = "https://login.microsoftonline.com/<tenant id>/oauth2/authorize"
+	//EndpointToken                = "https://login.microsoftonline.com/<tenant id>/oauth2/token"
+	//EndpointDeviceCode           = "https://login.microsoftonline.com/<tenant id>/oauth2/devicecode"
+	//EndpointRedirectNativeClient = "https://login.microsoftonline.com/common/oauth2/nativeclient"
+	TenantCommon        = "common"
+	TenantOrganizations = "organizations"
 )
 
 func Endpoint(base EndpointBase, tenantID string) string {
@@ -32,8 +32,8 @@ func AuthCodeEndpoint(tenantID string) oauth2.Endpoint {
 	}
 }
 
-func DeviceFlowEndpoint(tenantID string) deviceflow.Endpoint {
-	return deviceflow.Endpoint{
+func DeviceCodeEndpoint(tenantID string) devicecode.Endpoint {
+	return devicecode.Endpoint{
 		DeviceCodeURL: Endpoint(EndpointDeviceCode, tenantID),
 		TokenURL:      Endpoint(EndpointToken, tenantID),
 	}

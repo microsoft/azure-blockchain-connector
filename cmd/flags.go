@@ -3,7 +3,7 @@ package main
 import (
 	"azure-blockchain-connector/aad"
 	"azure-blockchain-connector/aad/authcode"
-	"azure-blockchain-connector/aad/deviceflow"
+	"azure-blockchain-connector/aad/oauth2/devicecode"
 	"azure-blockchain-connector/proxy"
 	"azure-blockchain-connector/proxy/providers"
 	"flag"
@@ -19,12 +19,12 @@ import (
 // hard code settings
 const (
 	// test: microsoftonline
-	hcAuthcodeClientId = "285286f5-b97b-4b45-ba35-92a74f35756a"
-	hcResource         = ""
+	//hcAuthcodeClientId = "285286f5-b97b-4b45-ba35-92a74f35756a"
+	//hcResource         = ""
 
 	// test: windows-ppe
-	//hcAuthcodeClientId = "a8196997-9cc1-4d8a-8966-ed763e15c7e1"
-	//hcResource         = "5838b1ed-6c81-4c2f-8ca1-693600b4e6ca"
+	hcAuthcodeClientId = "a8196997-9cc1-4d8a-8966-ed763e15c7e1"
+	hcResource         = "5838b1ed-6c81-4c2f-8ca1-693600b4e6ca"
 )
 
 const (
@@ -32,7 +32,7 @@ const (
 )
 
 // cli argument for getting auth code with webview, used internally
-const flagAuthCodeWebview = "authcode-webview"
+const flagAuthCodeWebview = authcode.DefaultWebviewFlag
 
 // checkStr checks if the str is "", then print flag.Usage to ask the user.
 // Keep the same exit code -1 with the former implementation.
@@ -173,9 +173,9 @@ func newProxyFromFlags() *proxy.Proxy {
 			}
 		case proxy.MethodOAuthDeviceFlow:
 			checkStr("client-id tenant-id", clientID, tenantID)
-			return &providers.OAuthDeviceFlow{
-				Config: &deviceflow.Config{
-					Endpoint: aad.DeviceFlowEndpoint(tenantID),
+			return &providers.OAuthDeviceCode{
+				Config: &devicecode.Config{
+					Endpoint: aad.DeviceCodeEndpoint(tenantID),
 					ClientID: clientID,
 					Scopes:   scopes,
 				},
