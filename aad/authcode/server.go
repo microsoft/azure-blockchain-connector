@@ -13,6 +13,7 @@ import (
 const (
 	PathAuthCodeAuth     = "/_click_to_auth"
 	PathAuthCodeCallback = "/_callback"
+	htmlSuccPage         = `<!DOCTYPE html><html lang="en"><head> <meta charset="UTF-8"> <title></title> <style>body{font-family: 'Segoe UI', SegoeUI, 'Segoe WP', Tahoma, Arial, sans-serif; font-size: 16px; font-weight: 400; color: white; background-color: #007FFF; user-select: none;}section{position: fixed; top: 0; right: 0; bottom: 0; left: 0; display: flex; align-items: center; justify-content: center; flex-flow: column nowrap;}h2{margin-top: -10vh; font-size: 24px; font-weight: 600; line-height: 1.2;}</style></head><body><section> <h2>Authorization succeeded</h2> <div>You may now close this window.</div></section></body></html>`
 )
 
 func prefixHTTP(addr string) string {
@@ -45,7 +46,7 @@ func GrantServer(ctx context.Context, conf *oauth2.Config, src OptionsSource, sv
 				close(complete)
 				return
 			}
-			_, _ = io.WriteString(w, `<script>window.close()</script>`)
+			_, _ = io.WriteString(w, htmlSuccPage)
 
 			close(complete)
 		})
@@ -68,5 +69,4 @@ func GrantServer(ctx context.Context, conf *oauth2.Config, src OptionsSource, sv
 		}
 		return
 	})
-
 }

@@ -18,7 +18,7 @@ const (
 	styleSuccPage = `body {font-family: 'Segoe UI', SegoeUI, 'Segoe WP', Tahoma, Arial, sans-serif; font-size: 16px; font-weight: 400;color: white; background-color: #007FFF; user-select: none; }
 							section {position: fixed; top: 0; right: 0; bottom: 0; left: 0; display: flex; flex-flow: column nowrap; align-items: center; justify-content: center;}
 							h2 {display: block; margin-top: -7vh; font-size: 24px; font-weight: 600; line-height: 1.2;}`
-	scriptShowSuccPage = `document.body.innerHTML = '<section><h2>Authorized Success!</h2><div>This window will close in <span id="cnt">5</span> seconds...</div></section>'`
+	scriptShowSuccPage = `document.body.innerHTML = '<section><h2>Authorization succeeded</h2><div>This window will close in <span id="cnt">5</span> seconds...</div></section>'`
 	scriptCountdown    = `var cnt=document.querySelector("#cnt");if(cnt)var timer=setInterval(function(){var a=parseInt(cnt.innerHTML);a-=1,cnt.innerHTML=""+a,0>=a&&clearInterval(timer)},1e3);`
 )
 
