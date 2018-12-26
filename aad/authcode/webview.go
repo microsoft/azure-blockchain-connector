@@ -1,4 +1,4 @@
-package aad
+package authcode
 
 import (
 	"bufio"
@@ -23,7 +23,7 @@ const (
 )
 
 // AuthCodeWebview opens a window for grant operations. Once authorized, it writes the code to the writer.
-func AuthCodeWebview(authURL string, out io.Writer) {
+func Webview(authURL string, out io.Writer) {
 	complete := false
 
 	href := stringChange("")
@@ -98,10 +98,10 @@ func requestAuthCodeWebview(authURL string, state string, flagName string) (code
 	return resolveCallback(query, state)
 }
 
-// AuthCodeGrantWithWebview use a webview window to help users to complete authorization.
-func AuthCodeGrantWebview(ctx context.Context, conf *oauth2.Config, flagName string) (*oauth2.Token, error) {
+// GrantWebview use a webview window to help users to complete authorization.
+func GrantWebview(ctx context.Context, conf *oauth2.Config, src OptionsSource, flagName string) (*oauth2.Token, error) {
 
-	return authCodeGrant(ctx, conf, func(authURL, stateToken string) (s string, e error) {
+	return authCodeGrant(ctx, conf, src, func(authURL, stateToken string) (s string, e error) {
 		return requestAuthCodeWebview(authURL, stateToken, flagName)
 	})
 }

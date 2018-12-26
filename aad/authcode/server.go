@@ -1,4 +1,4 @@
-package aad
+package authcode
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 )
 
 const (
@@ -15,25 +16,27 @@ const (
 )
 
 func CallbackPath(addr string) string {
+	if !strings.HasPrefix(addr, "http") {
+		addr = "http://" + addr
+	}
 	return addr + PathAuthCodeCallback
 }
 
-// AuthCodeGrantWithServer prints the authorization url to stdio and the user need to click the url to perform a grant.
+// GrantServer prints the authorization url to stdio and the user need to click the url to perform a grant.
 // This method listen to a port to receive the callback of the code and the state token from the server.
 // Then, it will terminate the server and returns received token values.
 // The browser window will also be closed(via window.close()) immediately after getting the information required.
-func AuthCodeGrantServer(ctx context.Context, conf *oauth2.Config, svcAddr string) (*oauth2.Token, error) {
-
+func GrantServer(ctx context.Context, conf *oauth2.Config, src OptionsSource, svcAddr string) (*oauth2.Token, error) {
 	stateToken := newStateToken()
-	authUrl := conf.AuthCodeURL(stateToken, oauth2.AccessTypeOffline)
+	authURL := conf.AuthCodeURL(stateToken)
 	fmt.Println("Authorize:", "http://"+svcAddr+PathAuthCodeAuth)
 
-	fmt.Println(authUrl)
+	fmt.Println(authURL)
 
 	mux := http.NewServeMux()
 	srv := &http.Server{Addr: svcAddr, Handler: mux}
 
-	mux.Handle(PathAuthCodeAuth, http.RedirectHandler(authUrl, http.StatusSeeOther))
+	mux.Handle(PathAuthCodeAuth, http.RedirectHandler(authURL, http.StatusSeeOther))
 
 	complete := make(chan struct{})
 	var tok *oauth2.Token

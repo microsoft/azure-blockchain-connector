@@ -2,6 +2,7 @@ package main
 
 import (
 	"azure-blockchain-connector/aad"
+	"azure-blockchain-connector/aad/authcode"
 	"azure-blockchain-connector/aad/deviceflow"
 	"azure-blockchain-connector/proxy"
 	"azure-blockchain-connector/proxy/providers"
@@ -15,8 +16,7 @@ import (
 )
 
 const (
-	defaultLocalAddr = "127.0.0.1:3100"
-	// Do not use oauth grant means using basic auth
+	defaultLocalAddr = "localhost:3100"
 )
 
 // cli argument for getting auth code with webview, used internally
@@ -100,23 +100,23 @@ func newProxyFromFlags() *proxy.Proxy {
 	}
 
 	// hard code scopes
-	// Azure: one scope must be supplied
-	// "offline_access" is used to request a refresh token
-	var scopes = []string{"offline_access", "api://285286f5-b97b-4b45-ba35-92a74f35756a/basic"}
+	var scopes = []string{""}
+	// In Azure AD v1, the scope field is ignored
+	//scopes = []string{"offline_access", "scope value here"}
 	if params.Method == proxy.MethodOAuthClientCredentials {
 		// See https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-client-creds-grant-flow
 		// this method should not provide a refresh token
 		scopes = []string{"https://graph.microsoft.com/.default"}
 	}
 
-	var redirectURL = aad.CallbackPath(authSvcAddr)
+	var redirectURL = authcode.CallbackPath(authSvcAddr)
 	// hard code redirect URL settings for different OS webviews
 	// "urn:ietf:wg:oauth:2.0:oob": webviews do not support the protocol
 	// webkit(macOS): visit "nativeclient" start a download automatically
 	if useWebview {
 		switch runtime.GOOS {
 		case "windows":
-			redirectURL = "https://login.microsoftonline.com/common/oauth2/nativeclient"
+			redirectURL = aad.EndpointRedirectNativeClient
 		case "darwin", "linux":
 			fallthrough
 		default:
@@ -131,12 +131,16 @@ func newProxyFromFlags() *proxy.Proxy {
 		case proxy.MethodOAuthAuthCode:
 			checkStr("client-id tenant-id", clientID, tenantID)
 			return &providers.OAuthAuthCode{
-				Config: &oauth2.Config{
-					Endpoint:     aad.AuthCodeEndpoint(tenantID),
-					ClientID:     clientID,
-					ClientSecret: clientSecret,
-					Scopes:       scopes,
-					RedirectURL:  redirectURL,
+				Config: &authcode.Config{
+					Config: &oauth2.Config{
+						Endpoint:     aad.AuthCodeEndpoint(tenantID),
+						ClientID:     clientID,
+						ClientSecret: clientSecret,
+						Scopes:       scopes,
+						RedirectURL:  redirectURL,
+					},
+					Resource: "5838b1ed-6c81-4c2f-8ca1-693600b4e6ca",
+					Prompt:   authcode.PromptSelectAccount,
 				},
 				UseWebview: useWebview,
 				SvcAddr:    authSvcAddr,

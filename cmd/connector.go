@@ -1,7 +1,7 @@
 package main
 
 import (
-	"azure-blockchain-connector/aad"
+	"azure-blockchain-connector/aad/authcode"
 	"flag"
 	"fmt"
 	"log"
@@ -59,7 +59,7 @@ func main() {
 		flag.StringVar(&authURL, flagAuthCodeWebview, "", "")
 		flag.Parse()
 
-		aad.AuthCodeWebview(authURL, os.Stdout)
+		authcode.Webview(authURL, os.Stdout)
 		return
 	}
 

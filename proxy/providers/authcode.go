@@ -31,6 +31,9 @@ func (ac *OAuthAuthCode) RequestAccess() error {
 	if err != nil {
 		return err
 	}
+
+	fmt.Println("Access:", tok.AccessToken)
+	fmt.Println("Refresh:", tok.AccessToken)
 	ac.client = ac.Config.Client(ctx, tok)
 
 	return nil

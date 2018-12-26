@@ -1,4 +1,4 @@
-package aad
+package authcode
 
 // stringChange is a string which can tell you if it is changed when new value comes in
 type stringChange string
@@ -10,6 +10,15 @@ func (c *stringChange) Changed(s string) bool {
 	if old != s {
 		*c = stringChange(s)
 		return true
+	}
+	return false
+}
+
+func stringSliceContains(sl []string, s string) bool {
+	for _, v := range sl {
+		if v == s {
+			return true
+		}
 	}
 	return false
 }
