@@ -10,9 +10,21 @@ import (
 	"fmt"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
+	"net/url"
 	"os"
 	"runtime"
 	"strings"
+)
+
+// hard code settings
+const (
+	// test: microsoftonline
+	hcAuthcodeClientId = "285286f5-b97b-4b45-ba35-92a74f35756a"
+	hcResource         = ""
+
+	// test: windows-ppe
+	//hcAuthcodeClientId = "a8196997-9cc1-4d8a-8966-ed763e15c7e1"
+	//hcResource         = "5838b1ed-6c81-4c2f-8ca1-693600b4e6ca"
 )
 
 const (
@@ -129,17 +141,17 @@ func newProxyFromFlags() *proxy.Proxy {
 	p := (func() proxy.Provider {
 		switch params.Method {
 		case proxy.MethodOAuthAuthCode:
-			checkStr("client-id tenant-id", clientID, tenantID)
+			checkStr("tenant-id", tenantID)
 			return &providers.OAuthAuthCode{
 				Config: &authcode.Config{
 					Config: &oauth2.Config{
 						Endpoint:     aad.AuthCodeEndpoint(tenantID),
-						ClientID:     clientID,
+						ClientID:     hcAuthcodeClientId,
 						ClientSecret: clientSecret,
 						Scopes:       scopes,
 						RedirectURL:  redirectURL,
 					},
-					Resource: "5838b1ed-6c81-4c2f-8ca1-693600b4e6ca",
+					Resource: hcResource,
 					Prompt:   authcode.PromptSelectAccount,
 				},
 				UseWebview: useWebview,
@@ -150,11 +162,13 @@ func newProxyFromFlags() *proxy.Proxy {
 			checkStr("client-id client-secret", clientID, clientSecret)
 			return &providers.OAuthClientCredentials{
 				Config: &clientcredentials.Config{
-					ClientID:       clientID,
-					ClientSecret:   clientSecret,
-					TokenURL:       aad.Endpoint(aad.EndpointToken, tenantID),
-					Scopes:         scopes,
-					EndpointParams: nil,
+					ClientID:     clientID,
+					ClientSecret: clientSecret,
+					TokenURL:     aad.Endpoint(aad.EndpointToken, tenantID),
+					Scopes:       scopes,
+					EndpointParams: url.Values{
+						"resource": {hcResource},
+					},
 				},
 			}
 		case proxy.MethodOAuthDeviceFlow:

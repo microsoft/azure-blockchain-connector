@@ -1,15 +1,16 @@
 package providers
 
 import (
-	"azure-blockchain-connector/aad"
+	"azure-blockchain-connector/aad/authcode"
 	"azure-blockchain-connector/proxy"
 	"context"
+	"fmt"
 	"golang.org/x/oauth2"
 	"net/http"
 )
 
 type OAuthAuthCode struct {
-	*oauth2.Config
+	*authcode.Config
 	UseWebview bool
 	SvcAddr    string
 	ArgName    string
@@ -23,9 +24,9 @@ func (ac *OAuthAuthCode) RequestAccess() error {
 	var err error
 
 	if ac.UseWebview {
-		tok, err = aad.AuthCodeGrantWebview(ctx, ac.Config, ac.ArgName)
+		tok, err = ac.Config.Webview(ctx, ac.ArgName)
 	} else {
-		tok, err = aad.AuthCodeGrantServer(ctx, ac.Config, ac.SvcAddr)
+		tok, err = ac.Config.Server(ctx, ac.SvcAddr)
 	}
 
 	if err != nil {
