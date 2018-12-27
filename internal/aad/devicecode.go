@@ -1,7 +1,7 @@
 package aad
 
 import (
-	"azure-blockchain-connector/aad/oauth2/devicecode"
+	"abc/internal/aad/devicecode"
 	"context"
 	"fmt"
 )

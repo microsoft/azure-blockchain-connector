@@ -1,9 +1,9 @@
 package providers
 
 import (
-	"azure-blockchain-connector/aad"
-	"azure-blockchain-connector/aad/oauth2/devicecode"
-	"azure-blockchain-connector/proxy"
+	"abc/internal/aad"
+	"abc/internal/aad/devicecode"
+	"abc/internal/proxy"
 	"context"
 	"fmt"
 	"net/http"
@@ -20,7 +20,10 @@ func (df *OAuthDeviceCode) RequestAccess() (err error) {
 
 	tok, err := aad.DeviceFlowGrant(ctx, df.Config)
 	df.token = tok
-	fmt.Println(tok.AccessToken)
+	if err == nil {
+		fmt.Println("Access:", tok.AccessToken)
+	}
+	df.client = &http.Client{}
 	return
 }
 

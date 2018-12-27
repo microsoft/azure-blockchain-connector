@@ -1,7 +1,7 @@
 package main
 
 import (
-	"azure-blockchain-connector/aad/authcode"
+	"abc/internal/aad/authcode"
 	"flag"
 	"fmt"
 	"log"

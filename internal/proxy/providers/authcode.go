@@ -1,8 +1,8 @@
 package providers
 
 import (
-	"azure-blockchain-connector/aad/authcode"
-	"azure-blockchain-connector/proxy"
+	"abc/internal/aad/authcode"
+	"abc/internal/proxy"
 	"context"
 	"fmt"
 	"golang.org/x/oauth2"
@@ -33,8 +33,11 @@ func (ac *OAuthAuthCode) RequestAccess() error {
 		return err
 	}
 
-	fmt.Println("Access:", tok.AccessToken)
-	fmt.Println("Refresh:", tok.AccessToken)
+	if tok != nil {
+		fmt.Println("Access:", tok.AccessToken)
+		fmt.Println("Refresh:", tok.AccessToken)
+	}
+
 	ac.client = ac.Config.Client(ctx, tok)
 
 	return nil

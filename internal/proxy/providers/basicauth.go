@@ -1,7 +1,7 @@
 package providers
 
 import (
-	"azure-blockchain-connector/proxy"
+	"abc/internal/proxy"
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
