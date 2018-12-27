@@ -5,7 +5,6 @@ import (
 	"abc/internal/aad/devicecode"
 	"abc/internal/proxy"
 	"context"
-	"fmt"
 	"net/http"
 )
 
@@ -20,9 +19,8 @@ func (df *OAuthDeviceCode) RequestAccess() (err error) {
 
 	tok, err := aad.DeviceFlowGrant(ctx, df.Config)
 	df.token = tok
-	if err == nil {
-		fmt.Println("Access:", tok.AccessToken)
-	}
+	printToken(tok)
+
 	df.client = &http.Client{}
 	return
 }

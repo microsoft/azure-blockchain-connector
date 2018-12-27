@@ -52,7 +52,7 @@ func checkStr(namesStr string, ss ...string) {
 func newProxyFromFlags() *proxy.Proxy {
 	var params = &proxy.Params{}
 
-	flag.StringVar(&params.Method, "method", proxy.MethodBasicAuth, "Authentication method. Basic auth (basic), authorization code (authcode), client credentials (client) and device flow(device)")
+	flag.StringVar(&params.Method, "method", proxy.MethodBasicAuth, "Authentication method. Basic auth (basic), authorization code (aadauthcode), client credentials (aadclient) and device flow(aaddevice)")
 	flag.StringVar(&params.Local, "local", defaultLocalAddr, "Local address to bind to")
 	flag.StringVar(&params.Remote, "remote", "", "Remote endpoint address")
 
@@ -86,9 +86,9 @@ func newProxyFromFlags() *proxy.Proxy {
 	flag.Parse()
 
 	switch params.Method {
-	case proxy.MethodBasicAuth, proxy.MethodOAuthAuthCode, proxy.MethodOAuthDeviceFlow, proxy.MethodOAuthClientCredentials:
+	case proxy.MethodBasicAuth, proxy.MethodOAuthAuthCode, proxy.MethodOAuthClientCredentials, proxy.MethodOAuthDeviceFlow:
 	default:
-		fmt.Println("Unexpected method value. Expected: basic, authcode, device")
+		fmt.Println("Unexpected method value. Expected: basic, aadauthcode, aadclient, aaddevice")
 		os.Exit(-1)
 	}
 

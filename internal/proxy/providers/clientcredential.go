@@ -3,7 +3,6 @@ package providers
 import (
 	"abc/internal/proxy"
 	"context"
-	"fmt"
 	"golang.org/x/oauth2/clientcredentials"
 	"net/http"
 )
@@ -18,10 +17,10 @@ func (ac *OAuthClientCredentials) RequestAccess() error {
 
 	tok, err := ac.Config.Token(ctx)
 	if err != nil {
-		fmt.Println(err)
-	} else {
-		fmt.Println("Access", tok.AccessToken)
+		return err
 	}
+	printToken(tok)
+
 	ac.client = ac.Config.Client(ctx)
 	return nil
 }

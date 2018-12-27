@@ -15,13 +15,15 @@ import (
 
 //noinspection ALL
 const (
-	DEV_ENABLE_PROXY = true
-	//DEV_ENABLE_PROXY = false
+	EnableProxy = false
 )
 
 //noinspection ALL
 func init() {
-	if DEV_ENABLE_PROXY {
+	providers.EnablePrintToken = true
+	//EnableProxy = true
+
+	if EnableProxy {
 		u, _ := url.Parse("http://localhost:8888")
 		http.DefaultTransport = &http.Transport{Proxy: http.ProxyURL(u)}
 	}

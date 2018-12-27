@@ -4,7 +4,6 @@ import (
 	"abc/internal/aad/authcode"
 	"abc/internal/proxy"
 	"context"
-	"fmt"
 	"golang.org/x/oauth2"
 	"net/http"
 )
@@ -32,11 +31,7 @@ func (ac *OAuthAuthCode) RequestAccess() error {
 	if err != nil {
 		return err
 	}
-
-	if tok != nil {
-		fmt.Println("Access:", tok.AccessToken)
-		fmt.Println("Refresh:", tok.AccessToken)
-	}
+	printToken(tok)
 
 	ac.client = ac.Config.Client(ctx, tok)
 
