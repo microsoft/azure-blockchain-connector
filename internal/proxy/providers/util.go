@@ -17,7 +17,7 @@ func printToken(tok interface{}) {
 	}
 	for _, name := range []string{"AccessToken", "RefreshToken"} {
 		f := elm.FieldByName(name)
-		if f.IsValid() {
+		if f.IsValid() && f.String() != "" {
 			fmt.Println(name+":", f.String())
 		}
 	}

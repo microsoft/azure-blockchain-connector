@@ -9,16 +9,13 @@ import (
 type EndpointBase string
 
 const (
-	EndpointAuthorize            = "https://login.windows-ppe.net/<tenant id>/oauth2/authorize"
-	EndpointToken                = "https://login.windows-ppe.net/<tenant id>/oauth2/token"
-	EndpointDeviceCode           = "https://login.windows-ppe.net/<tenant id>/oauth2/devicecode"
-	EndpointRedirectNativeClient = "https://login.windows-ppe.net/common/oauth2/nativeclient"
-	//EndpointAuthorize            = "https://login.microsoftonline.com/<tenant id>/oauth2/authorize"
-	//EndpointToken                = "https://login.microsoftonline.com/<tenant id>/oauth2/token"
-	//EndpointDeviceCode           = "https://login.microsoftonline.com/<tenant id>/oauth2/devicecode"
-	//EndpointRedirectNativeClient = "https://login.microsoftonline.com/common/oauth2/nativeclient"
-	TenantCommon        = "common"
-	TenantOrganizations = "organizations"
+	EndpointAuthorize            = "https://login.microsoftonline.com/<tenant id>/oauth2/authorize"
+	EndpointToken                = "https://login.microsoftonline.com/<tenant id>/oauth2/token"
+	EndpointDeviceCode           = "https://login.microsoftonline.com/<tenant id>/oauth2/devicecode"
+	EndpointRedirectNativeClient = "https://login.microsoftonline.com/common/oauth2/nativeclient"
+	TenantCommon                 = "common"
+	TenantOrganizations          = "organizations"
+	TenantMicrosoft              = "microsoft.onmicrosoft.com"
 )
 
 func Endpoint(base EndpointBase, tenantID string) string {

@@ -18,11 +18,6 @@ import (
 
 // hard code settings
 const (
-	// test: microsoftonline
-	//hcAuthcodeClientId = "285286f5-b97b-4b45-ba35-92a74f35756a"
-	//hcResource         = ""
-
-	// test: windows-ppe
 	hcAuthcodeClientId = "a8196997-9cc1-4d8a-8966-ed763e15c7e1"
 	hcResource         = "5838b1ed-6c81-4c2f-8ca1-693600b4e6ca"
 )
