@@ -12,10 +12,9 @@
  *   },
  */
 
-import {AzureADOAuth2Service, OAuth2Options} from "./aad/aad";
 
 const web3 = require('web3');
-
+// const {authCodeGrant, clientCredentialsGrant} = require("./aad");
 //===========SSL Cert Injection Begin============
 
 /*
@@ -33,35 +32,21 @@ const web3 = require('web3');
 module.exports = {
     networks: {
         net1: {
-            provider: async () => {
+            provider: function () {
 
                 let provider;
 
-                // basic auth
+                // Basic Authentication
                 provider = new web3.providers.HttpProvider("<node_uri>", 0, "<username>", "<password>");
 
-                // aad oauth
-                const param = {
-                    clientId: "<client-id>",
-                    clientSecret: "<client-secret>",
-                    authorityHostUrl: "<authority-host-url>",
-                    tenant: "<tenant>",
-                    redirectUri: "<redirect-uri>",
-                } as OAuth2Options;
-
-                const aad = new AzureADOAuth2Service(param);
-
-                try {
-                    // authorization code grant
-                    await aad.authCodeGrant("3100");
-
-                    // client credential grant requires a clientSecret
-                    await aad.clientCredentialsGrant();
-                } catch (err) {
-                    console.error(err)
-                }
-
-                provider = new web3.providers.HttpProvider("<node_uri>", 0, "", "", [aad.header]);
+                // AAD OAuth2
+                // As the provider() should return a provider synchronously, it is not supported to doing the async oauth2 authentication here.
+                // Truffle once supports loading an async provider, but now it does not. See https://github.com/trufflesuite/truffle/pull/1073
+                // You may run 'node aad.js' to get tokens manually, and here demos how to use the token with the official http provider.
+                // Please check the configs inside 'aad.js'.
+                const accessToken = "<access_token>";
+                const authHeader = {name: 'Authorization', value: 'Bearer ' + accessToken};
+                provider = new web3.providers.HttpProvider("<node_uri>", 0, "", "", [authHeader]);
 
                 //The "Account Unlock" part is not needed. We add it here because our sample will deploy a contract, and this action needs an account.
                 //In your own application, you may not need to unlock any account, and also you can choose to unlock an account at some other position.
