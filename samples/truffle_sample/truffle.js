@@ -37,16 +37,20 @@ module.exports = {
                 let provider;
 
                 // Basic Authentication
+                // Comment this line if you use AAD OAuth2.
                 provider = new web3.providers.HttpProvider("<node_uri>", 0, "<username>", "<password>");
 
                 // AAD OAuth2
                 // As the provider() should return a provider synchronously, it is not supported to doing the async oauth2 authentication here.
-                // Truffle once supports loading an async provider, but now it does not. See https://github.com/trufflesuite/truffle/pull/1073
+                // Truffle once supports loading an async provider, but now it does not. See https://github.com/trufflesuite/truffle/pull/1073 for detail.
                 // You may run 'node aad.js' to get tokens manually, and here demos how to use the token with the official http provider.
                 // Please check the configs inside 'aad.js'.
+                // Comment this line if you use basic auth.
+                const createAuthHeader = accessToken => ({name: "Authorization", value: "Bearer " + accessToken});
+
                 const accessToken = "<access_token>";
-                const authHeader = {name: 'Authorization', value: 'Bearer ' + accessToken};
-                provider = new web3.providers.HttpProvider("<node_uri>", 0, "", "", [authHeader]);
+                provider = new web3.providers.HttpProvider("<node_uri>", 0, "", "", [createAuthHeader(accessToken)]);
+
 
                 //The "Account Unlock" part is not needed. We add it here because our sample will deploy a contract, and this action needs an account.
                 //In your own application, you may not need to unlock any account, and also you can choose to unlock an account at some other position.
