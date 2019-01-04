@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"strings"
 )
@@ -53,7 +54,6 @@ func (p *Proxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	//completeFlag indicates if the server has finished constructing the response. It's initialized with value false.
 	//It will be set to true when response construction finished.
-	// when ServeHTTP finished (or crashed), if completeFlag remains false, the server will set the response's status code to 502.
 	completeFlag := false
 
 	// Notice that here the func in defer is needed!
@@ -86,6 +86,10 @@ func (p *Proxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	req.URL.Host = params.Remote
 	req.URL.Scheme = "https"
+
+	if isLoopbackAddr(req.URL.Host) {
+		req.URL.Scheme = "http"
+	}
 
 	logStrBuilder.WriteString(fmt.Sprintln("Requesting:", req.Method, req.URL))
 	if params.Whatlog >= LogWhatDetailed {
@@ -136,6 +140,17 @@ func (p *Proxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 			logFlag = false
 		}
 	}
+}
+
+func isLoopbackAddr(addr string) bool {
+	hosts := []string{"localhost", "127.0.0.1", "::1"}
+	host, _, _ := net.SplitHostPort(addr)
+	for _, h := range hosts {
+		if h == host {
+			return true
+		}
+	}
+	return false
 }
 
 func mustReadPem(path string) []byte {

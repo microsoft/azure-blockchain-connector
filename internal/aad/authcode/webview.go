@@ -3,6 +3,7 @@ package authcode
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"github.com/zserge/webview"
 	"golang.org/x/oauth2"
@@ -102,6 +103,10 @@ func requestAuthCodeWebview(authURL string, state string, flagName string) (code
 	query, err := scanner.Text(), scanner.Err()
 	if err != nil {
 		return
+	}
+
+	if query == "" {
+		return "", errors.New("oauth2: auth process terminated unexpectedly")
 	}
 
 	return resolveCallback(query, state)

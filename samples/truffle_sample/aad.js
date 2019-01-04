@@ -141,16 +141,6 @@ module.exports = {
                     resource: "5838b1ed-6c81-4c2f-8ca1-693600b4e6ca",
                     redirectUri: "http://localhost:3100/_callback"
                 });
-                Object.assign(opt, {
-                    authorityHostUrl: "https://login.microsoftonline.com",
-                    tenant: "microsoft.onmicrosoft.com",
-                    // clientId: "a8196997-9cc1-4d8a-8966-ed763e15c7e1",
-                    clientId: "285286f5-b97b-4b45-ba35-92a74f35756a",
-                    clientSecret: null,
-                    // resource: "5838b1ed-6c81-4c2f-8ca1-693600b4e6ca",
-                    resource: "https://graph.windows.net",
-                    redirectUri: "http://localhost:3100/_callback"
-                });
                 tok = await authCodeGrant(opt);
                 break;
             case "aadclient":

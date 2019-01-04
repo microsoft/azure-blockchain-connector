@@ -18,6 +18,10 @@ func newStateToken() string {
 
 // resolveCallback returns the code field of a query string.
 func resolveCallback(query string, state string) (string, error) {
+	if query == "" {
+		return "", errors.New("oauth2: authorization code not appear")
+	}
+
 	values, err := url.ParseQuery(query)
 	if err != nil {
 		return "", err
