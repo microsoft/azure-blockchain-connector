@@ -17,19 +17,6 @@ import (
 	"strings"
 )
 
-// hard code settings
-const (
-	hcAuthcodeClientId = "a8196997-9cc1-4d8a-8966-ed763e15c7e1"
-	hcResource         = "5838b1ed-6c81-4c2f-8ca1-693600b4e6ca"
-)
-
-const (
-	defaultLocalAddr = "localhost:3100"
-)
-
-// cli argument for getting auth code with webview, used internally
-const flagAuthCodeWebview = authcode.DefaultWebviewFlag
-
 // checkStr checks if the str is "", then print flag.Usage to ask the user.
 // Keep the same exit code -1 with the former implementation.
 func checkStr(namesStr string, ss ...string) {
@@ -48,7 +35,7 @@ func checkStr(namesStr string, ss ...string) {
 func newProxyFromFlags() *proxy.Proxy {
 	var params = &proxy.Params{}
 
-	flag.StringVar(&params.Method, "method", proxy.MethodBasicAuth, "Authentication method. Basic auth (basic), authorization code (aadauthcode), client credentials (aadclient) and device flow(aaddevice)")
+	flag.StringVar(&params.Method, "method", methodBasicAuth, "Authentication method. Basic auth (basic), authorization code (aadauthcode), client credentials (aadclient) and device flow(aaddevice)")
 	flag.StringVar(&params.Local, "local", defaultLocalAddr, "Local address to bind to")
 	flag.StringVar(&params.Remote, "remote", "", "Remote endpoint address")
 
@@ -82,7 +69,7 @@ func newProxyFromFlags() *proxy.Proxy {
 	flag.Parse()
 
 	switch params.Method {
-	case proxy.MethodBasicAuth, proxy.MethodOAuthAuthCode, proxy.MethodOAuthClientCredentials, proxy.MethodOAuthDeviceFlow:
+	case methodBasicAuth, methodOAuthAuthCode, methodOAuthClientCredentials, methodOAuthDeviceFlow:
 	default:
 		fmt.Println("Unexpected method value. Expected: basic, aadauthcode, aadclient, aaddevice")
 		os.Exit(-1)
@@ -112,7 +99,7 @@ func newProxyFromFlags() *proxy.Proxy {
 	var scopes = []string{""}
 	// In Azure AD v1, the scope field is ignored
 	//scopes = []string{"offline_access", "scope value here"}
-	if params.Method == proxy.MethodOAuthClientCredentials {
+	if params.Method == methodOAuthClientCredentials {
 		// See https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-client-creds-grant-flow
 		// this method should not provide a refresh token
 		scopes = []string{"https://graph.microsoft.com/.default"}
@@ -137,7 +124,7 @@ func newProxyFromFlags() *proxy.Proxy {
 
 	p := (func() proxy.Provider {
 		switch params.Method {
-		case proxy.MethodOAuthAuthCode:
+		case methodOAuthAuthCode:
 			checkStr("tenant-id", tenantID)
 			return &proxyproviders.OAuthAuthCode{
 				Config: &authcode.Config{
@@ -155,7 +142,7 @@ func newProxyFromFlags() *proxy.Proxy {
 				SvcAddr:    authSvcAddr,
 				ArgName:    flagAuthCodeWebview,
 			}
-		case proxy.MethodOAuthDeviceFlow:
+		case methodOAuthDeviceFlow:
 			checkStr("tenant-id", tenantID)
 			return &proxyproviders.OAuthDeviceCode{
 				Config: &devicecode.Config{
@@ -167,7 +154,7 @@ func newProxyFromFlags() *proxy.Proxy {
 					Resource: hcResource,
 				},
 			}
-		case proxy.MethodOAuthClientCredentials:
+		case methodOAuthClientCredentials:
 			checkStr("client-id client-secret", clientID, clientSecret)
 			return &proxyproviders.OAuthClientCredentials{
 				Config: &clientcredentials.Config{
@@ -180,7 +167,7 @@ func newProxyFromFlags() *proxy.Proxy {
 					},
 				},
 			}
-		case proxy.MethodBasicAuth:
+		case methodBasicAuth:
 			fallthrough
 		default:
 			checkStr("username password", username, password)

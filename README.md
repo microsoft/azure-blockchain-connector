@@ -28,7 +28,7 @@ For authentication, this project supports basic authentication and several Azure
 
 **-cert** *string*: The certification file(PEM)'s path.
 
-**-method** *string*: the authentication method you want to use. Available options are `basic` ,  `aadauthcode`, `aadclient`, for basic auth, AAD auth code flow, AAD client credentials flow respectively. Please refer to the following sections for detail method parameters. Default: `basic`.
+**-method** *string*: the authentication method you want to use. Available options are `basic` ,  `aadauthcode`, `aaddevice`, `aadclient`, for basic auth, AAD auth code flow, AAD device code flow, AAD client credentials flow respectively. Please refer to the following sections for detail method parameters. Default: `basic`.
 
 ### Basic Authentication
 
@@ -58,12 +58,14 @@ Now auth code flow and client credentials flow are supported. In auth code flow,
 
 **-webview** *bool*: an optional arg for auth code flow. In Windows, its default value is true, the proxy will popup a webview window to ask the user to select their account to grant authentications. Otherwise, the proxy will listen to a specified host to receive a credential callback(auth code) from a authentication server.
 
-**-authcode-addr** *string*: an optional arg for auth code flow. When popping-up window is not supported, or **-webview** is false, the proxy will listen to the host specified by this arg to receive auth code. The default value is `localhost:3100`. It only works when corresponding values are set in the Azure Portal. 
+**-authcode-addr** *string*: an optional arg for auth code flow. When popping-up window is not supported, or **-webview** is false, the proxy will listen to the host specified by this arg to receive auth code. The default value is `localhost:3100`. It only works when corresponding values are set in the Azure Portal. If using AAD, it will print the first pair of the access_token and refresh_token.
 
 ```shell
 # Example
 
 .\abc -remote="samplenode.blockchain.azure.com:3200" -method="aadauthcode" -tenant-id="micrsoft.onmicrosoft.com"
+
+.\abc -remote="samplenode.blockchain.azure.com:3200" -method="aaddevice" -tenant-id="micrsoft.onmicrosoft.com"
 
 .\abc -remote="samplenode.blockchain.azure.com:3200" -method="aadclient" -tenant-id="micrsoft.onmicrosoft.com" -client-id="12345678-abcd-efgh-ijkl-1234567890ab"
 -client-secret="q@w#e%r^t&y*u(i)o_p"

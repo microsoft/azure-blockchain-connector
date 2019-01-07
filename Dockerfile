@@ -1,12 +1,9 @@
-FROM golang:1.11 AS build
-RUN apt-get update
-RUN apt-get install libwebkit2gtk-4.0-dev -y
+FROM golang:1.11-alpine AS build
+RUN apk add bash ca-certificates git gcc g++ libc-dev
 WORKDIR /src
-COPY ./go.mod ./go.sum ./
-RUN go mod download
 COPY . .
 ENV GO111MODULE=on
-RUN GOOS=linux go build -o connector ./cmd
+RUN GOOS=linux go build -o connector ./cmd/abc/
 
 FROM ubuntu:16.04 AS ca-stores
 RUN apt-get update -y
