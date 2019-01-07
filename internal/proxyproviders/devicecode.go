@@ -1,27 +1,36 @@
-package providers
+package proxyproviders
 
 import (
-	"abc/internal/aad"
-	"abc/internal/aad/devicecode"
+	"abc/internal/oauth2dc"
 	"abc/internal/proxy"
 	"context"
+	"fmt"
 	"net/http"
 )
 
 type OAuthDeviceCode struct {
-	*devicecode.Config
-	token  *devicecode.Token
+	*oauth2dc.Config
 	client *http.Client
 }
 
 func (df *OAuthDeviceCode) RequestAccess() (err error) {
 	var ctx = context.Background()
 
-	tok, err := aad.DeviceFlowGrant(ctx, df.Config)
-	df.token = tok
+	deviceAuth, err := df.Config.AuthDevice(ctx)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Open:", deviceAuth.VerificationURI)
+	fmt.Println("Enter:", deviceAuth.UserCode)
+
+	tok, err := df.Config.Poll(ctx, deviceAuth)
+	if err != nil {
+		return
+	}
 	printToken(tok)
 
-	df.client = &http.Client{}
+	df.client = df.Config.Client(ctx, tok)
 	return
 }
 
@@ -30,5 +39,4 @@ func (df *OAuthDeviceCode) Client() *http.Client {
 }
 
 func (df *OAuthDeviceCode) Modify(params *proxy.Params, req *http.Request) {
-	req.Header.Set("Authorization", "Bearer"+" "+df.token.AccessToken)
 }

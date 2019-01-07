@@ -2,8 +2,9 @@ package authcode
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/base64"
 	"errors"
-	"github.com/google/uuid"
 	"golang.org/x/oauth2"
 	"net/url"
 	"reflect"
@@ -13,7 +14,11 @@ import (
 // AuthCodeWebview opens a webview window with authURL, and detects the redirect URL to get auth code and state.
 
 func newStateToken() string {
-	return uuid.New().String()
+	data := make([]byte, 64)
+	if _, err := rand.Read(data); err != nil {
+		return "_state"
+	}
+	return base64.StdEncoding.EncodeToString(data)
 }
 
 // resolveCallback returns the code field of a query string.

@@ -41,7 +41,7 @@ Basic auth adds an authentication header to the users' requests using their user
 ```shell
 # Example
 
-.\abc -remote="node.example.com" -username="alice" -password="123"
+.\abc -remote="samplenode.blockchain.azure.com:3200" -username="alice" -password="123"
 ```
 
 ### Azure Active Directory
@@ -63,9 +63,9 @@ Now auth code flow and client credentials flow are supported. In auth code flow,
 ```shell
 # Example
 
-.\abc -remote="node.example.com" -method="aadauthcode" -tenant-id="micrsoft.onmicrosoft.com"
+.\abc -remote="samplenode.blockchain.azure.com:3200" -method="aadauthcode" -tenant-id="micrsoft.onmicrosoft.com"
 
-.\abc -remote="node.example.com" -method="aadclient" -tenant-id="micrsoft.onmicrosoft.com" -client-id="12345678-abcd-efgh-ijkl-1234567890ab"
+.\abc -remote="samplenode.blockchain.azure.com:3200" -method="aadclient" -tenant-id="micrsoft.onmicrosoft.com" -client-id="12345678-abcd-efgh-ijkl-1234567890ab"
 -client-secret="q@w#e%r^t&y*u(i)o_p"
 
 ```

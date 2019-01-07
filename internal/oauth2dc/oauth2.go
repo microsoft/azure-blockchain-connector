@@ -6,7 +6,7 @@
 // OAuth2 authorized and authenticated HTTP requests,
 // as specified in RFC 6749.
 // It can additionally grant authorization with Bearer JWT.
-package oauth2dc // import "golang.org/x/oauth2"
+package oauth2dc
 
 import (
 	"abc/internal/oauth2dc/internal"
@@ -17,6 +17,7 @@ import (
 	"net/url"
 	"strings"
 	"sync"
+	"time"
 )
 
 // NoContext is the default context you should supply if not using
@@ -73,8 +74,9 @@ type TokenSource interface {
 // Endpoint contains the OAuth 2.0 provider's authorization and token
 // endpoint URLs.
 type Endpoint struct {
-	AuthURL  string
-	TokenURL string
+	AuthURL       string
+	DeviceAuthURL string
+	TokenURL      string
 }
 
 var (
@@ -200,6 +202,61 @@ func (c *Config) Exchange(ctx context.Context, code string, opts ...AuthCodeOpti
 		opt.setValue(v)
 	}
 	return retrieveToken(ctx, c, v)
+}
+
+// AuthDevice returns a device auth struct which contains a device code
+// and authorization information provided for users to enter on another device.
+func (c *Config) AuthDevice(ctx context.Context) (*DeviceAuth, error) {
+	v := url.Values{
+		"client_id": {c.ClientID},
+	}
+	if len(c.Scopes) > 0 {
+		v.Set("scope", strings.Join(c.Scopes, " "))
+	}
+	return retrieveDeviceAuth(ctx, c, v)
+}
+
+// Poll does a polling to exchange an device code for a token.
+func (c *Config) Poll(ctx context.Context, da *DeviceAuth) (*Token, error) {
+	v := url.Values{
+		"client_id": {c.ClientID},
+		// Providers may use "device_code" for short, in RFC it must be set to this value.
+		// See https://tools.ietf.org/html/draft-ietf-oauth-device-flow-07#section-3.4
+		//"grant_type":  {"device_code"},
+		"grant_type":  {"urn:ietf:params:oauth:grant-type:device_code"},
+		"device_code": {da.DeviceCode},
+		"code":        {da.DeviceCode},
+	}
+
+	if len(c.Scopes) > 0 {
+		v.Set("scope", strings.Join(c.Scopes, " "))
+	}
+
+	// If no interval was provided, the client MUST use a reasonable default polling interval.
+	// See https://tools.ietf.org/html/draft-ietf-oauth-device-flow-07#section-3.5
+	interval := da.Interval
+	if interval == 0 {
+		interval = 5
+	}
+
+	for {
+		time.Sleep(time.Duration(interval) * time.Second)
+
+		tok, err := retrieveToken(ctx, c, v)
+		if err == nil {
+			return tok, nil
+		}
+
+		errTyp := parseError(err)
+		switch errTyp {
+		case errAccessDenied, errExpiredToken:
+			return tok, errors.New("oauth2: " + errTyp)
+		case errSlowDown:
+			interval += 5
+			fallthrough
+		case errAuthorizationPending:
+		}
+	}
 }
 
 // Client returns an HTTP client using the provided token.

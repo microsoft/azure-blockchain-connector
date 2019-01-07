@@ -1,7 +1,7 @@
 package aad
 
 import (
-	"abc/internal/aad/devicecode"
+	"abc/internal/oauth2dc"
 	"golang.org/x/oauth2"
 	"strings"
 )
@@ -29,9 +29,9 @@ func AuthCodeEndpoint(tenantID string) oauth2.Endpoint {
 	}
 }
 
-func DeviceCodeEndpoint(tenantID string) devicecode.Endpoint {
-	return devicecode.Endpoint{
-		DeviceCodeURL: Endpoint(EndpointDeviceCode, tenantID),
+func DeviceCodeEndpoint(tenantID string) oauth2dc.Endpoint {
+	return oauth2dc.Endpoint{
+		DeviceAuthURL: Endpoint(EndpointDeviceCode, tenantID),
 		TokenURL:      Endpoint(EndpointToken, tenantID),
 	}
 }

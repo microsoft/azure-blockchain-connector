@@ -3,9 +3,9 @@ package main
 import (
 	"abc/internal/aad"
 	"abc/internal/aad/authcode"
-	"abc/internal/aad/devicecode"
+	"abc/internal/oauth2dc"
 	"abc/internal/proxy"
-	"abc/internal/proxy/providers"
+	"abc/internal/proxyproviders"
 	"flag"
 	"fmt"
 	"golang.org/x/oauth2"
@@ -137,7 +137,7 @@ func newProxyFromFlags() *proxy.Proxy {
 		switch params.Method {
 		case proxy.MethodOAuthAuthCode:
 			checkStr("tenant-id", tenantID)
-			return &providers.OAuthAuthCode{
+			return &proxyproviders.OAuthAuthCode{
 				Config: &authcode.Config{
 					Config: &oauth2.Config{
 						Endpoint:     aad.AuthCodeEndpoint(tenantID),
@@ -155,7 +155,7 @@ func newProxyFromFlags() *proxy.Proxy {
 			}
 		case proxy.MethodOAuthClientCredentials:
 			checkStr("client-id client-secret", clientID, clientSecret)
-			return &providers.OAuthClientCredentials{
+			return &proxyproviders.OAuthClientCredentials{
 				Config: &clientcredentials.Config{
 					ClientID:     clientID,
 					ClientSecret: clientSecret,
@@ -168,8 +168,8 @@ func newProxyFromFlags() *proxy.Proxy {
 			}
 		case proxy.MethodOAuthDeviceFlow:
 			checkStr("client-id tenant-id", clientID, tenantID)
-			return &providers.OAuthDeviceCode{
-				Config: &devicecode.Config{
+			return &proxyproviders.OAuthDeviceCode{
+				Config: &oauth2dc.Config{
 					Endpoint: aad.DeviceCodeEndpoint(tenantID),
 					ClientID: clientID,
 					Scopes:   scopes,
@@ -179,7 +179,7 @@ func newProxyFromFlags() *proxy.Proxy {
 			fallthrough
 		default:
 			checkStr("username password", username, password)
-			return &providers.BasicAuth{
+			return &proxyproviders.BasicAuth{
 				Remote:   params.Remote,
 				Username: username,
 				Password: password,

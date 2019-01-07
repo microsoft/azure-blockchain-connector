@@ -1,4 +1,4 @@
-package providers
+package proxyproviders
 
 import (
 	"abc/internal/proxy"

@@ -29,7 +29,7 @@ func (p *emptyProvider) Modify(params *Params, req *http.Request) {
 }
 
 func BenchmarkDirect(b *testing.B) {
-	ns := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	ns := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
 	defer ns.Close()
 	c := insecureClient()
 	b.ResetTimer()
@@ -47,7 +47,7 @@ func BenchmarkProxy(b *testing.B) {
 	}
 	_ = proxy.Provider.RequestAccess()
 
-	ns := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	ns := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
 	defer ns.Close()
 
 	ps := httptest.NewServer(proxy)
