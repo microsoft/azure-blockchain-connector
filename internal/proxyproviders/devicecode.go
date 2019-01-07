@@ -1,30 +1,21 @@
 package proxyproviders
 
 import (
-	"abc/internal/oauth2dc"
+	"abc/internal/aad/devicecode"
 	"abc/internal/proxy"
 	"context"
-	"fmt"
 	"net/http"
 )
 
 type OAuthDeviceCode struct {
-	*oauth2dc.Config
+	*devicecode.Config
 	client *http.Client
 }
 
 func (df *OAuthDeviceCode) RequestAccess() (err error) {
 	var ctx = context.Background()
 
-	deviceAuth, err := df.Config.AuthDevice(ctx)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println("Open:", deviceAuth.VerificationURI)
-	fmt.Println("Enter:", deviceAuth.UserCode)
-
-	tok, err := df.Config.Poll(ctx, deviceAuth)
+	tok, err := df.Config.Grant(ctx)
 	if err != nil {
 		return
 	}

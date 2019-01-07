@@ -3,6 +3,7 @@ package main
 import (
 	"abc/internal/aad"
 	"abc/internal/aad/authcode"
+	"abc/internal/aad/devicecode"
 	"abc/internal/oauth2dc"
 	"abc/internal/proxy"
 	"abc/internal/proxyproviders"
@@ -104,6 +105,7 @@ func newProxyFromFlags() *proxy.Proxy {
 	if debugmode {
 		params.Whenlog = proxy.LogWhenAlways
 		params.Whatlog = proxy.LogWhatDetailed
+		proxyproviders.EnablePrintToken = true
 	}
 
 	// hard code scopes
@@ -153,6 +155,18 @@ func newProxyFromFlags() *proxy.Proxy {
 				SvcAddr:    authSvcAddr,
 				ArgName:    flagAuthCodeWebview,
 			}
+		case proxy.MethodOAuthDeviceFlow:
+			checkStr("tenant-id", tenantID)
+			return &proxyproviders.OAuthDeviceCode{
+				Config: &devicecode.Config{
+					Config: &oauth2dc.Config{
+						Endpoint: aad.DeviceCodeEndpoint(tenantID),
+						ClientID: hcAuthcodeClientId,
+						Scopes:   scopes,
+					},
+					Resource: hcResource,
+				},
+			}
 		case proxy.MethodOAuthClientCredentials:
 			checkStr("client-id client-secret", clientID, clientSecret)
 			return &proxyproviders.OAuthClientCredentials{
@@ -164,15 +178,6 @@ func newProxyFromFlags() *proxy.Proxy {
 					EndpointParams: url.Values{
 						"resource": {hcResource},
 					},
-				},
-			}
-		case proxy.MethodOAuthDeviceFlow:
-			checkStr("client-id tenant-id", clientID, tenantID)
-			return &proxyproviders.OAuthDeviceCode{
-				Config: &oauth2dc.Config{
-					Endpoint: aad.DeviceCodeEndpoint(tenantID),
-					ClientID: clientID,
-					Scopes:   scopes,
 				},
 			}
 		case proxy.MethodBasicAuth:

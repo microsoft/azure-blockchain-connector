@@ -28,6 +28,7 @@ func printToken(tok interface{}) {
 }
 
 // PollAuthHeader starts a test server and prints auth headers by polling.
+// e.g p.Params.Remote = proxyproviders.PollAuthHeader(p.Params.Local, time.Minute)
 func PollAuthHeader(local string, interval time.Duration) string {
 	cnt := 0
 	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

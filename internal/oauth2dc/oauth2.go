@@ -206,18 +206,21 @@ func (c *Config) Exchange(ctx context.Context, code string, opts ...AuthCodeOpti
 
 // AuthDevice returns a device auth struct which contains a device code
 // and authorization information provided for users to enter on another device.
-func (c *Config) AuthDevice(ctx context.Context) (*DeviceAuth, error) {
+func (c *Config) AuthDevice(ctx context.Context, opts ...AuthCodeOption) (*DeviceAuth, error) {
 	v := url.Values{
 		"client_id": {c.ClientID},
 	}
 	if len(c.Scopes) > 0 {
 		v.Set("scope", strings.Join(c.Scopes, " "))
 	}
+	for _, opt := range opts {
+		opt.setValue(v)
+	}
 	return retrieveDeviceAuth(ctx, c, v)
 }
 
 // Poll does a polling to exchange an device code for a token.
-func (c *Config) Poll(ctx context.Context, da *DeviceAuth) (*Token, error) {
+func (c *Config) Poll(ctx context.Context, da *DeviceAuth, opts ...AuthCodeOption) (*Token, error) {
 	v := url.Values{
 		"client_id": {c.ClientID},
 		// Providers may use "device_code" for short, in RFC it must be set to this value.
@@ -227,9 +230,11 @@ func (c *Config) Poll(ctx context.Context, da *DeviceAuth) (*Token, error) {
 		"device_code": {da.DeviceCode},
 		"code":        {da.DeviceCode},
 	}
-
 	if len(c.Scopes) > 0 {
 		v.Set("scope", strings.Join(c.Scopes, " "))
+	}
+	for _, opt := range opts {
+		opt.setValue(v)
 	}
 
 	// If no interval was provided, the client MUST use a reasonable default polling interval.

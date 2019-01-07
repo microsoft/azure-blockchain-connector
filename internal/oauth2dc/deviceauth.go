@@ -62,7 +62,7 @@ func retrieveDeviceAuth(ctx context.Context, c *Config, v url.Values) (*DeviceAu
 
 	// Azure AD supplies verification_url instead of verification_uri
 	if da.VerificationURI == "" {
-		da.VerificationURI = da.raw["verification_url"].(string)
+		da.VerificationURI, _ = da.raw["verification_url"].(string)
 	}
 
 	return da, nil
