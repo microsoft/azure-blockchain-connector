@@ -1,6 +1,7 @@
 package authcode
 
 import (
+	"abc/internal/util"
 	"bufio"
 	"context"
 	"errors"
@@ -29,7 +30,7 @@ const DefaultWebviewFlag = "authcode-webview"
 func Webview(authURL string, out io.Writer) {
 	complete := false
 
-	href := stringChange("")
+	href := util.StringChange("")
 	w := webview.New(webview.Settings{
 		Title:     "Request Access",
 		Width:     800,
@@ -113,9 +114,9 @@ func requestAuthCodeWebview(authURL string, state string, flagName string) (code
 }
 
 // GrantWebview use a webview window to help users to complete authorization.
-func GrantWebview(ctx context.Context, conf *oauth2.Config, src OptionsSource, flagName string) (*oauth2.Token, error) {
+func GrantWebview(ctx context.Context, conf *oauth2.Config, extraParamsSrc interface{}, flagName string) (*oauth2.Token, error) {
 
-	return authCodeGrant(ctx, conf, src, func(authURL, stateToken string) (s string, e error) {
+	return authCodeGrant(ctx, conf, extraParamsSrc, func(authURL, stateToken string) (s string, e error) {
 		return requestAuthCodeWebview(authURL, stateToken, flagName)
 	})
 }

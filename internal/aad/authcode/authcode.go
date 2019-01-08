@@ -1,13 +1,13 @@
 package authcode
 
 import (
+	"abc/internal/util"
 	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
 	"golang.org/x/oauth2"
 	"net/url"
-	"reflect"
 )
 
 // todo: timeout settings
@@ -49,49 +49,18 @@ func resolveCallback(query string, state string) (string, error) {
 // fnRequestAuthCode represents the process of visiting a URL to get authorization code.
 type fnRequestAuthCode func(authURL, stateToken string) (code string, err error)
 
-func options(v interface{}, keys []string) []oauth2.AuthCodeOption {
-	var opts []oauth2.AuthCodeOption
-	elm := reflect.ValueOf(v).Elem()
-	typ := elm.Type()
-
-	for i := 0; i < elm.NumField(); i++ {
-		f := elm.Field(i)
-		if f.Type() != reflect.TypeOf("") {
-			continue
-		}
-		k, v := typ.Field(i).Tag.Get("key"), elm.Field(i).String()
-		if !stringSliceContains(keys, k) || v == "" {
-			continue
-		}
-		opts = append(opts, oauth2.SetAuthURLParam(k, v))
-	}
-	return opts
-}
-
-type OptionsSource interface {
-	OptionsNameList() ([]string, []string)
-}
-
-func authCodeOptions(src OptionsSource) ([]oauth2.AuthCodeOption, []oauth2.AuthCodeOption) {
-	l, l2 := src.OptionsNameList()
-	// always requesting a refresh token is not bad now
-	return append(options(src, l), oauth2.AccessTypeOffline), options(src, l2)
-}
-
 // authCodeGrant returns an oauth2 token type with customizable code fetching process.
-func authCodeGrant(ctx context.Context, conf *oauth2.Config, src OptionsSource, fn fnRequestAuthCode) (*oauth2.Token, error) {
+func authCodeGrant(ctx context.Context, conf *oauth2.Config, extraParamsSrc interface{}, fn fnRequestAuthCode) (*oauth2.Token, error) {
 	stateToken := newStateToken()
-	opts, opts2 := authCodeOptions(src)
 
-	authURL := conf.AuthCodeURL(stateToken, opts...)
-
+	authURL := conf.AuthCodeURL(stateToken, util.FieldsToOAuthParams(extraParamsSrc, "auth_code")...)
 	code, err := fn(authURL, stateToken)
 	if err != nil {
 		return nil, err
 	}
 
-	opts2 = append(opts2, oauth2.SetAuthURLParam("client_id", conf.ClientID))
-	tok, err := conf.Exchange(ctx, code, opts2...)
+	opts := append(util.FieldsToOAuthParams(extraParamsSrc, "exchange"), oauth2.SetAuthURLParam("client_id", conf.ClientID))
+	tok, err := conf.Exchange(ctx, code, opts...)
 
 	return tok, err
 }
@@ -108,18 +77,14 @@ const (
 
 type Config struct {
 	*oauth2.Config
-	ResponseMode string `key:"response_mode"`
-	Resource     string `key:"resource"`
-	Prompt       string `key:"prompt"`
-	LoginHint    string `key:"login_hint"`
-	DomainHint   string `key:"domain_hint"`
+	ResponseMode string `auth_code:"response_mode"`
+	Resource     string `auth_code:"resource" exchange:"resource"`
+	Prompt       string `auth_code:"prompt"`
+	LoginHint    string `auth_code:"login_hint"`
+	DomainHint   string `auth_code:"domain_hint"`
 	//CodeChallengeMethod string
 	//CodeChallenge       string
 	//CodeVerifier        string
-}
-
-func (c *Config) OptionsNameList() ([]string, []string) {
-	return []string{"response_mode", "resource", "prompt", "login_hint", "domain_hint"}, []string{"resource"}
 }
 
 func (c *Config) Server(ctx context.Context, svcAddr string) (*oauth2.Token, error) {

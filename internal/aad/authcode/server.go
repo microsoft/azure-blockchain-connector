@@ -31,9 +31,9 @@ func CallbackPath(addr string) string {
 // This method listen to a port to receive the callback of the code and the state token from the server.
 // Then, it will terminate the server and returns received token values.
 // The browser window will also be closed(via window.close()) immediately after getting the information required.
-func GrantServer(ctx context.Context, conf *oauth2.Config, src OptionsSource, svcAddr string) (*oauth2.Token, error) {
+func GrantServer(ctx context.Context, conf *oauth2.Config, extraParamsSrc interface{}, svcAddr string) (*oauth2.Token, error) {
 
-	return authCodeGrant(ctx, conf, src, func(authURL, stateToken string) (code string, err error) {
+	return authCodeGrant(ctx, conf, extraParamsSrc, func(authURL, stateToken string) (code string, err error) {
 		mux := http.NewServeMux()
 		srv := &http.Server{Addr: svcAddr, Handler: mux}
 		mux.Handle(PathAuthCodeAuth, http.RedirectHandler(authURL, http.StatusSeeOther))

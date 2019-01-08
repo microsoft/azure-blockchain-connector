@@ -4,7 +4,6 @@ import (
 	"abc/internal/aad"
 	"abc/internal/aad/authcode"
 	"abc/internal/aad/devicecode"
-	"abc/internal/oauth2dc"
 	"abc/internal/proxy"
 	"abc/internal/proxyproviders"
 	"flag"
@@ -146,11 +145,11 @@ func newProxyFromFlags() *proxy.Proxy {
 			checkStr("tenant-id", tenantID)
 			return &proxyproviders.OAuthDeviceCode{
 				Config: &devicecode.Config{
-					Config: &oauth2dc.Config{
-						Endpoint: aad.DeviceCodeEndpoint(tenantID),
+					Config: &oauth2.Config{
 						ClientID: hcAuthcodeClientId,
 						Scopes:   scopes,
 					},
+					Endpoint: aad.DeviceCodeEndpoint(tenantID),
 					Resource: hcResource,
 				},
 			}

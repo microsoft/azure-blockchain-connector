@@ -1,10 +1,11 @@
-package oauth2dc
+package devicecode
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
 	"golang.org/x/net/context/ctxhttp"
+	"golang.org/x/oauth2"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -23,9 +24,9 @@ type DeviceAuth struct {
 	DeviceCode              string `json:"device_code"`
 	UserCode                string `json:"user_code"`
 	VerificationURI         string `json:"verification_uri,verification_url"`
-	VerificationURIComplete string `json:"verification_uri_complete,omitempty"`
+	VerificationURIComplete string `json:"verification_uri_complete"`
 	ExpiresIn               int    `json:"expires_in,string"`
-	Interval                int    `json:"interval,string,omitempty"`
+	Interval                int    `json:"interval,string"`
 	raw                     map[string]interface{}
 }
 
@@ -46,7 +47,7 @@ func retrieveDeviceAuth(ctx context.Context, c *Config, v url.Values) (*DeviceAu
 		return nil, fmt.Errorf("oauth2: cannot auth device: %v", err)
 	}
 	if code := r.StatusCode; code < 200 || code > 299 {
-		return nil, &RetrieveError{
+		return nil, &oauth2.RetrieveError{
 			Response: r,
 			Body:     body,
 		}
@@ -69,7 +70,7 @@ func retrieveDeviceAuth(ctx context.Context, c *Config, v url.Values) (*DeviceAu
 }
 
 func parseError(err error) string {
-	e, ok := err.(*RetrieveError)
+	e, ok := err.(*oauth2.RetrieveError)
 	if ok {
 		eResp := make(map[string]string)
 		_ = json.Unmarshal(e.Body, &eResp)
