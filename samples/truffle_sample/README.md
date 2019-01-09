@@ -28,7 +28,9 @@ Notice:
 
 # Network Setting and Account Setting
 
-1. Open **truffle.js** and change the parameters \<node_uri\>, \<username\>, \<password\> ,\<account\> and \<account_passphase\> to your own parameters.
+1. Open **truffle.js**. If you use basic authentication, change the parameters \<node_uri\>, \<username\>, \<password\> ,\<account\> and \<account_passphase\> to your own parameters.
+
+   If you use AAD OAuth2 methods, run `npm install adal-node express`. Secondly, change the settings in aad.js, including <tenant-id>, <client-id>, and so on. Then, run `node aad.js` to get access_token and change the <access_token> in **truffle.js**.
 
 Notice:
  - The "Account Unlock" part is not always needed. We add it here because our sample will deploy a contract, and this action needs an account.
@@ -49,7 +51,7 @@ Later when you want to exit the console, you can run:
 If you met the connection error "Could not connect to your Ethereum client. Please check that ......", Please see the section "SSL Cert Injection" for help.
 
 Notice:
-    - net1 is the name of the network definition in **truffle.js**, and you can change the name by yourself.
+​    - net1 is the name of the network definition in **truffle.js**, and you can change the name by yourself.
 
 3. Apply for a new account (If you already have an account, you can skip this step).
 In the truffle console, run:
@@ -92,4 +94,4 @@ The connection error "Could not connect to your Ethereum client. Please check th
 3. Install the package ssl-root-cas:
  ```bash
 npm install ssl-root-cas
-```
+ ```

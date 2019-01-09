@@ -1,127 +1,91 @@
-# Blockchain Connector
+# Azure Blockchain Connector
 
-This is a proxy for you to connect to the blockchain safely. We provide three ways for you to use it: 
+ABC is a proxy for you to access blockchain safely. With this project, you can connect to nodes with basic authentication or Azure Active Directory. To use it, you just need to provide a local address, your target node address and your authentication information. Then, you can access the nodes using your client applications via the local address.
 
-    - Compile our source code (implement with golang) and run it.
-    
-    - Run it in Docker Container, with the Dockerfile we presented in this branch. 
-    
-    - Run with the binary release (not available yet).
+## Quickstart
 
-## Run with the Source Code
+This project is developed under golang 1.11, dependences will be configured automatically during the build process. If you cannot proceed the cgo build, you may install gcc to support it.
 
-1. Get the environment of golang ready.
+```shell
+git clone https://github.com/Microsoft/azure-blockchain-connector.git
+cd .\azure-blockchain-connector\
+go build .\cmd\abc
 
-2. 
-```bash
-go get github.com/Microsoft/azure-blockchain-connector/tree/basic_auth
+.\abc <your parameters here>
 ```
 
-3. In the project directory, run
-```bash
-go build -o <outputFile> HttpProxy.go
+Docker build is also supported but it is not recommended. You may want to check the content of `.dockerfile`.
+
+For authentication, this project supports basic authentication and several Azure Active Directory OAuth2 interfaces. To use the proxy, you need to supply parameters of the basic settings (local, remote addresses, secure settings), and then choose an authentication method and provide corresponding information. 
+
+### Basic Parameters
+
+**-remote** *string, **required***: The host of the blockchain node you want to access.
+
+**-local** *string*: The local listen host. Your client(e.g geth) need to connect to this address and requests sent to this host will be redirected to the remote host. If not provided, `localhost:3100` will be used by default. 
+
+**-insecure** *bool*: Indicating whether it should skip certificate verification. Sending authentication information via an insecure HTTP connection is dangerous, please check Basic Authentication and OAuth2 protocols.
+
+**-cert** *string*: The certification file(PEM)'s path.
+
+**-method** *string*: the authentication method you want to use. Available options are `basic` ,  `aadauthcode`, `aaddevice`, `aadclient`, for basic auth, AAD auth code flow, AAD device code flow, AAD client credentials flow respectively. Please refer to the following sections for detail method parameters. Default: `basic`.
+
+### Basic Authentication
+
+Basic auth adds an authentication header to the users' requests using their user-ID and password. If you choose basic auth, the following two args are required.
+
+**-username** *string*: basic auth username field.
+
+**-password** *string*: basic auth password field.
+
+```shell
+# Example
+
+.\abc -remote="samplenode.blockchain.azure.com:3200" -username="alice" -password="123"
 ```
 
-where \<outputFile\> is the name of the executable file you want to specify with, "HttpProxy" if not specified.
+### Azure Active Directory
 
-4. 
-```bash
-./<outputFile>  <parameters>
+This proxy supports several AAD OAuth2 authentication flows. **-tenant-id** is always a required argument. **-client-id** and **-client-secret** are sometimes required for specified methods (In fact, this is because we pre-populate certain methods with fixed values that should never change, so you don't need to supply them). 
+
+Now auth code flow and client credentials flow are supported. In auth code flow, you should provide **-tenant-id** and other args are not required. For client credentials flow, you must also provide **-client-id** and **-client-secret** values.
+
+**-tenant-id** *string*: required field id of the Azure Active Directory Tenant your Azure Blockchain Member belongs to.
+
+**-client-id** *string*: required in the client credentials flow, specifies the AAD application you want to use to access.
+
+**-client-secret** *string*: a secret value for the application. required in client credentials flow to indicate the user is the owner of the AAD application.
+
+**-webview** *bool*: an optional arg for auth code flow. In Windows, its default value is true, the proxy will popup a webview window to ask the user to select their account to grant authentications. Otherwise, the proxy will listen to a specified host to receive a credential callback(auth code) from a authentication server.
+
+**-authcode-addr** *string*: an optional arg for auth code flow. When popping-up window is not supported, or **-webview** is false, the proxy will listen to the host specified by this arg to receive auth code. The default value is `localhost:3100`. It only works when corresponding values are set in the Azure Portal. If using AAD, it will print the first pair of the access_token and refresh_token.
+
+```shell
+# Example
+
+.\abc -remote="samplenode.blockchain.azure.com:3200" -method="aadauthcode" -tenant-id="micrsoft.onmicrosoft.com"
+
+.\abc -remote="samplenode.blockchain.azure.com:3200" -method="aaddevice" -tenant-id="micrsoft.onmicrosoft.com"
+
+.\abc -remote="samplenode.blockchain.azure.com:3200" -method="aadclient" -tenant-id="micrsoft.onmicrosoft.com" -client-id="12345678-abcd-efgh-ijkl-1234567890ab"
+-client-secret="q@w#e%r^t&y*u(i)o_p"
+
 ```
-where \<parameters\> is the parameters needed by the program. To know about the parameters in detail, see the section "Parameters". 
 
-## Run with the Dockerfile
+### Logging
 
-1. Get the environment for Docker.
+**-whenlog** *string*: configuration about in what cases logs should be prited. Alternatives are "always", "onNon200" and "onError". Default "is onError".
 
-2. Clone or download this repo to anywhere you like (If you clone it, please make sure to check out to the brunch "basic_auth").
+- **onError**: print log only for those who raise exceptions.
+- **onNon200**: print log for those who have a non-200 response, or those who raise exceptions.
+- **always**: print log for every request
 
-3. Run in the project directory
-```bash
-docker build -t <image_name> .
-```
-where \<image_name\> is the name of the output image.
+**-whatlog** *string*: configuration about what information should be included in logs. Alternatives are "basic" and "detailed". Default is "basic".
 
-4. 
-```bash
-docker run --net=host --name=<container_name> <image_name> <parameters>
-```
-where <container_name> is the name of the container you are to run, and \<parameters\> are the parameters of the entrypoint (which essentially are the parameters of the golang code). To know about the parameters in detail, see the section "Parameters".
+- **basic**: print the request's method and URI, and the response status code (and the exception message, if exception raised) in the log.
+- **detailed**: print the request's method, URI and body, and the response status code and body (and the exception message, if exception raised) in the log.
 
-## Parameters
-
-1. parameters:
-
-   - **username** *string*
-
-            The username you want to login with (no default).
-
-   - **password** *string*
-
-            The password you want to login with (no default).
-
-   - **local** *string*
-
-            Local address to bind to (default "127.0.0.1:3100"). Note that local address can be non-local, but if so, you should make sure the connection from your computer to the "local address" is safe (e.g. the connection is in a LAN).
-
-   - **remote** *string*
-
-           The host you want to send to (no default).
-
-    - **cert** *string*
-
-            The CA cert of the remote.
-
-    - **insecure** *bool*
-
-            Indicating if it should skip certificate verifications.
-
-    - **whenlog** *string*
-
-            Configuration about in what cases logs should be prited. Alternatives are "always", "onNon200" and "onError". Default "is onError". See 4 for details.
-
-    - **whatlog** *string*
-
-            Configuration about what information should be included in logs. Alternatives are "basic" and "detailed". Default is "basic". See 5 for details.
-
-    - **debugmode** *bool*
-
-            Open debug mode. It will set whenlog to always and whatlog to detailed, and original settings for whenlog and whatlog are covered.
-
-2. example for users who run with our source code:
-
-   ```bash
-   ./<outputFile> -username user -password 12345 -remote https://microsoft.com/ -local 127.0.0.1:3100 -insecure -debugmode
-   ```
-
-3. examples for users who run with Docker
-    ```bash
-   docker run --net=host --name=<container_name> <image_name> -username user -password 12345 -remote https://microsoft.com/ -local 127.0.0.1:3100 -insecure
-   ```
-
-4. explainations about the alternatives for **whenlog**
-
-    - **onError**
-
-            Print log only for those who raise exceptions.
-
-    - **onNon200** 
-
-            Print log for those who have a non-200 response, or those who raise exceptions.
-
-    - **always** 
-
-            Print log for every request
-
-5. explainations about the alternatives for **whatlog**
-
-    - **basic**
-
-            Print the request's method and URI, and the response status code (and the exception message, if exception raised) in the log.
-
-    - **detailed** 
-
-            Print the request's method, URI and body, and the response status code and body (and the exception message, if exception raised) in the log.
+**-debugmode** *bool*: open debug mode. It will set whenlog to always and whatlog to detailed, and original settings for whenlog and whatlog are covered.
 
 # Contributing
 

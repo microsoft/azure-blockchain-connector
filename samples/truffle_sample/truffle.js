@@ -12,8 +12,9 @@
  *   },
  */
 
-const web3 = require('web3');
 
+const web3 = require('web3');
+// const {authCodeGrant, clientCredentialsGrant} = require("./aad");
 //===========SSL Cert Injection Begin============
 
 /*
@@ -29,33 +30,50 @@ const web3 = require('web3');
 //===========SSL Cert Injection End============
 
 module.exports = {
-  networks:{
-    net1:{
-      provider: () => {        
-        var provider = new web3.providers.HttpProvider("<node_uri>",0,"<username>","<password>");
+    networks: {
+        net1: {
+            provider: function () {
 
-        //The "Account Unlock" part is not needed. We add it here because our sample will deploy a contract, and this action needs an account.
-        //In your own application, you may not need to unlock any account, and also you can choose to unlock an account at some other position.
+                let provider;
 
-        //==============Account Unlock Begin=============
+                // Basic Authentication
+                // Comment this line if you use AAD OAuth2.
+                provider = new web3.providers.HttpProvider("<node_uri>", 0, "<username>", "<password>");
 
-        var web3Instance = new web3(provider);
-        web3Instance.personal.unlockAccount("<account>","<account_passphase>");
+                // AAD OAuth2
+                // As the provider() should return a provider synchronously, it is not supported to doing the async oauth2 authentication here.
+                // Truffle once supports loading an async provider, but now it does not. See https://github.com/trufflesuite/truffle/pull/1073 for detail.
+                // You may run 'node aad.js' to get tokens manually, and here demos how to use the token with the official http provider.
+                // Please check the configs inside 'aad.js'.
+                // Comment this line if you use basic auth.
+                const createAuthHeader = accessToken => ({name: "Authorization", value: "Bearer " + accessToken});
 
-        //==============Account Unlock End=============
+                const accessToken = "<access_token>";
+                provider = new web3.providers.HttpProvider("<node_uri>", 0, "", "", [createAuthHeader(accessToken)]);
 
-        return provider;
-      },  
-      network_id:"*", 
-      gas:4500000,  
-      gasPrice:0,
 
-      //================Sender Account Assignation Begin==============
+                //The "Account Unlock" part is not needed. We add it here because our sample will deploy a contract, and this action needs an account.
+                //In your own application, you may not need to unlock any account, and also you can choose to unlock an account at some other position.
 
-      from:"<account>"
+                //==============Account Unlock Begin=============
 
-      //================Sender Account Assignation End==============
-    },
-  
-  }
+                // var web3Instance = new web3(provider);
+                // web3Instance.personal.unlockAccount("<account>", "<account_passphase>");
+
+                //==============Account Unlock End=============
+
+                return provider;
+            },
+            network_id: "*",
+            gas: 4500000,
+            gasPrice: 0,
+
+            //================Sender Account Assignation Begin==============
+
+            from: "<account>"
+
+            //================Sender Account Assignation End==============
+        },
+
+    }
 };
