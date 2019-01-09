@@ -13,9 +13,6 @@ const (
 	EndpointToken                = "https://login.microsoftonline.com/<tenant id>/oauth2/token"
 	EndpointDeviceCode           = "https://login.microsoftonline.com/<tenant id>/oauth2/devicecode"
 	EndpointRedirectNativeClient = "https://login.microsoftonline.com/common/oauth2/nativeclient"
-	TenantCommon                 = "common"
-	TenantOrganizations          = "organizations"
-	TenantMicrosoft              = "microsoft.onmicrosoft.com"
 )
 
 func Endpoint(base EndpointBase, tenantID string) string {

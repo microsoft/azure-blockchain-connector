@@ -50,7 +50,7 @@ This proxy supports several AAD OAuth2 authentication flows. **-tenant-id** is a
 
 Now auth code flow and client credentials flow are supported. In auth code flow, you should provide **-tenant-id** and other args are not required. For client credentials flow, you must also provide **-client-id** and **-client-secret** values.
 
-**-tenant-id** *string*: required field indicating the tenant your AAD account belongs to. It might be a host or a string of id.
+**-tenant-id** *string*: required field id of the Azure Active Directory Tenant your Azure Blockchain Member belongs to.
 
 **-client-id** *string*: required in the client credentials flow, specifies the AAD application you want to use to access.
 
