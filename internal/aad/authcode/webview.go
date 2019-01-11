@@ -18,6 +18,6 @@ func Webview(authURL string, out io.Writer) {
 }
 
 // GrantWebview use a webview window to help users to complete authorization.
-func GrantWebview(ctx context.Context, conf *oauth2.Config, src OptionsSource, flagName string) (*oauth2.Token, error) {
+func GrantWebview(ctx context.Context, conf *oauth2.Config, extraParamsSrc interface{}, flagName string) (*oauth2.Token, error) {
 	return nil, errors.New("webview: not supported in macOS and Linux, please use aaddevice or aadclient method")
 }
