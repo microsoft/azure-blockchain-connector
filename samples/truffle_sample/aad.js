@@ -1,11 +1,12 @@
+// This is a sample code using the adal-node library to show how azure-blockchain-connector works in the background.
+// The most part is simply wrapping the adal-node library for a clear view.
+// To use this code, you may want to run `npm install adal-node express` to get deps.
+// You may also find the code in web3_sample.
+
 const {AuthenticationContext} = require("adal-node");
 const createApplication = require('express');
 const crypto = require('crypto');
 const url = require('url');
-
-// This is a sample code using the adal-node library to show how azure-blockchain-connector works in the background.
-// The most part is simply wraps the adal-node library and you can check the last part to see how the grant flow.
-// To use this code, you may want to run `npm install adal-node express` to get deps.
 
 function getAuthorityUrl(opt) {
     return opt.authorityHostUrl + '/' + opt.tenant;
@@ -86,6 +87,28 @@ function clientCredentialsGrant(opt) {
     })
 }
 
+function deviceCodeGrant(opt, language) {
+    return new Promise((resolve, reject) => {
+        const ctx = new AuthenticationContext(getAuthorityUrl(opt));
+        ctx.acquireUserCode(opt.resource, opt.clientId, language, (err, userCodeInfo) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+            console.log("Open:", userCodeInfo.verificationUrl);
+            console.log("Enter:", userCodeInfo.userCode);
+            ctx.acquireTokenWithDeviceCode(opt.resource, opt.clientId, userCodeInfo,
+                (err, resp) => {
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
+                    resolve(resp);
+                })
+        })
+    })
+}
+
 function refreshAccessToken(refreshToken, opt) {
     return new Promise((resolve, reject) => {
         const ctx = new AuthenticationContext(getAuthorityUrl(opt));
@@ -98,6 +121,36 @@ function refreshAccessToken(refreshToken, opt) {
                 resolve(resp);
             })
     })
+
+}
+
+// scheduleRefreshAccessToken shows a way to refresh token on expire
+// Please note that setInterval and setTimeout is not accurate in JavaScript.
+// A better way is to handle send()/sendAsync() errors, but in that case you might have to write your own provider.
+function scheduleRefreshAccessToken(tok, opt, callback) {
+    if (tok && tok.refreshToken) {
+        const schedule = (timeoutFn, fn) => {
+            let timeout;
+            try {
+                timeout = timeoutFn();
+            } catch (e) {
+                console.error(e);
+            }
+            setTimeout(() => {
+                fn();
+                schedule(timeoutFn, fn);
+            }, timeout)
+        };
+
+        schedule(() => tok.expiresIn * 999, async () => {
+            try {
+                tok = await refreshAccessToken(tok.refreshToken, opt);
+                callback(tok)
+            } catch (err) {
+                console.log(err);
+            }
+        });
+    }
 }
 
 function printToken(tok) {
@@ -107,14 +160,61 @@ function printToken(tok) {
     console.log()
 }
 
+async function retrieveToken(nodeUri, opt, method) {
+    // auth code flow/device code flow use fixed settings to work
+    if (method === "aadauthcode" || method === "aaddevice") {
+        Object.assign(opt, {
+            authorityHostUrl: "https://login.microsoftonline.com",
+            tenant: "microsoft.onmicrosoft.com",
+            clientId: "a8196997-9cc1-4d8a-8966-ed763e15c7e1",
+            clientSecret: null,
+            resource: "5838b1ed-6c81-4c2f-8ca1-693600b4e6ca",
+            redirectUri: "http://localhost:3100/_callback"
+        });
+    }
+
+    let tok;
+    // use a method to retrieve
+    try {
+        switch (method) {
+            case "aadauthcode":
+                tok = await authCodeGrant(opt);
+                break;
+            case "aaddevice":
+                tok = await deviceCodeGrant(opt);
+                break;
+            case "aadclient":
+                tok = await clientCredentialsGrant(opt);
+                break;
+        }
+    } catch (err) {
+        console.error(err)
+    }
+    printToken(tok);
+
+    if (!tok) {
+        console.error("no token");
+        return;
+    }
+    scheduleRefreshAccessToken(tok, opt, token => {
+        tok = token;
+        printToken(tok);
+    });
+
+}
+
+
 module.exports = {
     authCodeGrant,
+    deviceCodeGrant,
     clientCredentialsGrant,
-    refreshAccessToken
+    refreshAccessToken,
+    scheduleRefreshAccessToken,
+    printToken,
+    retrieveToken
 };
 
-(async function () {
-
+(function () {
     let opt = {
         authorityHostUrl: "https://login.microsoftonline.com",
         tenant: "<tenant-id>",
@@ -123,52 +223,5 @@ module.exports = {
         resource: "<resource>",
         redirectUri: "<redirect_uri>", // required in auth code flow
     };
-
-    // here you may choose a method
-    const method = "aadauthcode";
-
-    let tok;
-    try {
-        switch (method) {
-            case "aadauthcode":
-                // authorization code grant
-                // for azure-blockchain-connector, it uses fixed settings for auth code mode to work
-                Object.assign(opt, {
-                    authorityHostUrl: "https://login.microsoftonline.com",
-                    tenant: "microsoft.onmicrosoft.com",
-                    clientId: "a8196997-9cc1-4d8a-8966-ed763e15c7e1",
-                    clientSecret: null,
-                    resource: "5838b1ed-6c81-4c2f-8ca1-693600b4e6ca",
-                    redirectUri: "http://localhost:3100/_callback"
-                });
-                tok = await authCodeGrant(opt);
-                break;
-            case "aadclient":
-                // client credentials grant
-                tok = await clientCredentialsGrant(opt);
-        }
-    } catch (err) {
-        console.error(err)
-    }
-
-    if (tok && tok.refreshToken) {
-        // refresh access_token when expires
-        // Please note that setInterval and setTimeout is not accurate in JavaScript.
-        const schedule = (timeoutFn, fn) => setTimeout(() => {
-            fn();
-            schedule(timeoutFn, fn);
-        }, timeoutFn());
-
-        schedule(() => tok.expiresIn * 1000, async () => {
-            try {
-                tok = await refreshAccessToken(tok.refreshToken, opt);
-                printToken(tok);
-            } catch (err) {
-                console.log(err);
-            }
-        });
-    }
-
-    printToken(tok);
-
+    retrieveToken("<node_uri>", opt, "aaddevice").then();
 })();

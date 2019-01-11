@@ -1,6 +1,5 @@
 // This is a sample code using the adal-node library to show how azure-blockchain-connector works in the background.
-// The most part is simply wraps the adal-node library and you can check the last part to see how the grant flow.
-// To use this code, you may want to run `npm install adal-node express` to get deps.
+// The most part is simply wrapping the adal-node library for a clear view.
 
 const {AuthenticationContext} = require("adal-node");
 const createApplication = require('express');
