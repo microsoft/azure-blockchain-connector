@@ -107,7 +107,9 @@ namespace nethereum_sample
                 switch (method)
                 {
                     case "aadauthcode":
-                        result =   paramconfi
+                        result = await ctx.AcquireTokenAsync(config.Resource, config.ClientId,
+                            new Uri(config.RedirectUri),
+                            new PlatformParameters(PromptBehavior.SelectAccount));
                         break;
                     case "aaddevice":
                         var codeResult = await ctx.AcquireDeviceCodeAsync(config.Resource, config.ClientId);
