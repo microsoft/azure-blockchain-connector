@@ -6,15 +6,14 @@ ABC is a proxy for you to access blockchain safely. With this project, you can c
 
 This project is developed under golang 1.11, dependences will be configured automatically during the build process. If you cannot proceed the cgo build, you may install gcc to support it.
 
-```shell
+```
 git clone https://github.com/Microsoft/azure-blockchain-connector.git
 cd .\azure-blockchain-connector\
 go build .\cmd\abc
 
 .\abc <your parameters here>
 ```
-
-Docker build is also supported but it is not recommended. You may want to check the content of `.dockerfile`.
+You can run [./build.cmd](./build.cmd) to build for windows, macOS and linux at the same time. The output executables will be located at `./build`. Docker build is also supported but it is not recommended. You may want to check the content of `./.dockerfile`.
 
 For authentication, this project supports basic authentication and several Azure Active Directory OAuth2 interfaces. To use the proxy, you need to supply parameters of the basic settings (local, remote addresses, secure settings), and then choose an authentication method and provide corresponding information. 
 
