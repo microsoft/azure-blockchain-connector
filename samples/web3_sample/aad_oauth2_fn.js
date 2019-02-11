@@ -1,7 +1,5 @@
 // This is a sample code using the adal-node library to show how azure-blockchain-connector works in the background.
 // The most part is simply wrapping the adal-node library for a clear view.
-// To use this code, you may want to run `npm install adal-node express` to get deps.
-// You may also find the code in web3_sample.
 
 const {AuthenticationContext} = require("adal-node");
 const createApplication = require('express');
@@ -153,54 +151,12 @@ function scheduleRefreshAccessToken(tok, opt, callback) {
     }
 }
 
+
 function printToken(tok) {
     console.log("Access:", tok.accessToken);
     console.log("Expires in:", tok.expiresIn);
     console.log("Expires on:", tok.expiresOn);
     console.log()
-}
-
-async function retrieveToken(nodeUri, opt, method) {
-    // auth code flow/device code flow use fixed settings to work
-    if (method === "aadauthcode" || method === "aaddevice") {
-        Object.assign(opt, {
-            authorityHostUrl: "https://login.microsoftonline.com",
-            tenant: "microsoft.onmicrosoft.com",
-            clientId: "a8196997-9cc1-4d8a-8966-ed763e15c7e1",
-            clientSecret: null,
-            resource: "5838b1ed-6c81-4c2f-8ca1-693600b4e6ca",
-            redirectUri: "http://localhost:3100/_callback"
-        });
-    }
-
-    let tok;
-    // use a method to retrieve
-    try {
-        switch (method) {
-            case "aadauthcode":
-                tok = await authCodeGrant(opt);
-                break;
-            case "aaddevice":
-                tok = await deviceCodeGrant(opt);
-                break;
-            case "aadclient":
-                tok = await clientCredentialsGrant(opt);
-                break;
-        }
-    } catch (err) {
-        console.error(err)
-    }
-    printToken(tok);
-
-    if (!tok) {
-        console.error("no token");
-        return;
-    }
-    scheduleRefreshAccessToken(tok, opt, token => {
-        tok = token;
-        printToken(tok);
-    });
-
 }
 
 
@@ -210,18 +166,5 @@ module.exports = {
     clientCredentialsGrant,
     refreshAccessToken,
     scheduleRefreshAccessToken,
-    printToken,
-    retrieveToken
+    printToken
 };
-
-(function () {
-    let opt = {
-        authorityHostUrl: "https://login.microsoftonline.com",
-        tenant: "<tenant-id>",
-        clientId: "<client-id>",
-        clientSecret: "<client-secret>", // required in client credentials flow
-        resource: "<resource>",
-        redirectUri: "<redirect_uri>", // required in auth code flow
-    };
-    retrieveToken("<node_uri>", opt, "aaddevice").then();
-})();

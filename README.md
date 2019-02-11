@@ -87,6 +87,21 @@ Now auth code flow and client credentials flow are supported. In auth code flow,
 
 **-debugmode** *bool*: open debug mode. It will set whenlog to always and whatlog to detailed, and original settings for whenlog and whatlog are covered.
 
+# Access Nodes without ABC
+
+This project is only an out-of-the-box tool for users to connect to nodes conveniently. You can also update your own workflows to support interacting with a transaction nodes. In general, it is to add basic auth support and OAuth2 support. For some oauth2 methods, some pre-specified settings should be used.
+
+To add basic auth support, add an authentication header with base64-encoded username:password pair to all requests.
+```
+Authentication: Basic base64(<username>:<password>)
+```
+To add AAD support, use an OAuth2 grant flow to retrieve a token. Then append the token with a bearer authentication header. We support auth code flow, device flow and client credentials flow. The former two are three-legged flows, you should use specified OAuth2 settings to let the user logging in. Or you may register self-managed AAD application to use the client credentials flow.
+```
+Authentication: Bearer <access_token>
+```
+You can find sample code in [/samples](samples), which includes samples for [web3.js](samples/web3_sample), [truffle](samples/truffle_sample) and [Nethereum](samples/nethereum_sample). You can also get the specified settings mentioned above from these samples.
+
+
 # Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a

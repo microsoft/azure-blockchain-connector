@@ -30,7 +30,7 @@ Notice:
 
 1. Open **truffle.js**. If you use basic authentication, change the parameters \<node_uri\>, \<username\>, \<password\> ,\<account\> and \<account_passphase\> to your own parameters.
 
-   If you use AAD OAuth2 methods, run `npm install adal-node express`. Secondly, change the settings in aad.js, including <tenant-id>, <client-id>, and so on. Then, run `node aad.js` to get access_token and change the <access_token> in **truffle.js**.
+   If you use AAD OAuth2 methods, run `npm install adal-node express`. Secondly, change the settings in aad.js, including <tenant-id>, <client-id>, and so on. Then, run `node aad.js` to get access_token and change the <access_token> in **truffle.js**. You may also check the web3_sample as truffle uses a web3 provider.
 
 Notice:
  - The "Account Unlock" part is not always needed. We add it here because our sample will deploy a contract, and this action needs an account.
