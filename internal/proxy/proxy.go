@@ -2,10 +2,7 @@ package proxy
 
 import (
 	"bytes"
-	"crypto/tls"
-	"crypto/x509"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"strings"
@@ -146,32 +143,4 @@ func isLoopbackAddr(addr string) bool {
 		}
 	}
 	return false
-}
-
-func mustReadPem(path string) []byte {
-	if path == "" {
-		return []byte("")
-	}
-	pem, err := ioutil.ReadFile(path)
-	if err != nil {
-		fmt.Println("ReadFile err:", err)
-	}
-	return pem
-}
-
-func (p *Proxy) ConfigureClient() {
-	pool := x509.NewCertPool()
-	pool.AppendCertsFromPEM(mustReadPem(p.Params.CertPath))
-
-	c := p.Provider.Client()
-	if c.Transport == nil {
-		c.Transport = &http.Transport{}
-	}
-	if t, ok := c.Transport.(*http.Transport); ok {
-		t.TLSClientConfig = &tls.Config{
-			RootCAs:            pool,
-			InsecureSkipVerify: p.Params.Insecure,
-		}
-		t.MaxIdleConnsPerHost = 1024
-	}
 }

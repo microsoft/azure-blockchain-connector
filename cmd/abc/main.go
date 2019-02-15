@@ -69,7 +69,6 @@ func main() {
 
 	p := newProxyFromFlags()
 	check(p.Provider.RequestAccess())
-	p.ConfigureClient()
 
 	go func() {
 		check(http.ListenAndServe(p.Local, p))
