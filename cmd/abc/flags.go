@@ -154,7 +154,7 @@ func newProxyFromFlags() *proxy.Proxy {
 				},
 			}
 		case methodOAuthClientCredentials:
-			checkStr("client-id client-secret", clientID, clientSecret)
+			checkStr("tenant-id client-id client-secret", tenantID, clientID, clientSecret)
 			return &proxyproviders.OAuthClientCredentials{
 				Config: &clientcredentials.Config{
 					ClientID:     clientID,
@@ -174,6 +174,8 @@ func newProxyFromFlags() *proxy.Proxy {
 				Remote:   params.Remote,
 				Username: username,
 				Password: password,
+				CertPath: params.CertPath,
+				Insecure: params.Insecure,
 			}
 		}
 	})()

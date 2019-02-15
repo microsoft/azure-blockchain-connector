@@ -4,7 +4,7 @@ ABC is a proxy for you to access blockchain safely. With this project, you can c
 
 ## Quickstart
 
-This project is developed under golang 1.11, dependences will be configured automatically during the build process. If you cannot proceed the cgo build, you may install gcc to support it.
+To build this project, you need to install golang 1.11 and tdm-gcc.
 
 ```
 git clone https://github.com/Microsoft/azure-blockchain-connector.git
@@ -49,7 +49,7 @@ This proxy supports several AAD OAuth2 authentication flows. **-tenant-id** is a
 
 Now auth code flow and client credentials flow are supported. In auth code flow, you should provide **-tenant-id** and other args are not required. For client credentials flow, you must also provide **-client-id** and **-client-secret** values.
 
-**-tenant-id** *string*: required field id of the Azure Active Directory Tenant your Azure Blockchain Member belongs to.
+**-tenant-id** *string*: required field id of the Azure Active Directory your Azure Blockchain Member belongs to. You can use both the domain string and the GUID string.
 
 **-client-id** *string*: required in the client credentials flow, specifies the AAD application you want to use to access.
 
@@ -62,11 +62,11 @@ Now auth code flow and client credentials flow are supported. In auth code flow,
 ```shell
 # Example
 
-.\abc -remote="samplenode.blockchain.azure.com:3200" -method="aadauthcode" -tenant-id="micrsoft.onmicrosoft.com"
+.\abc -remote="samplenode.blockchain.azure.com:3200" -method="aadauthcode" -tenant-id="<your_directory_id>"
 
-.\abc -remote="samplenode.blockchain.azure.com:3200" -method="aaddevice" -tenant-id="micrsoft.onmicrosoft.com"
+.\abc -remote="samplenode.blockchain.azure.com:3200" -method="aaddevice" -tenant-id="<your_directory_id>"
 
-.\abc -remote="samplenode.blockchain.azure.com:3200" -method="aadclient" -tenant-id="micrsoft.onmicrosoft.com" -client-id="12345678-abcd-efgh-ijkl-1234567890ab"
+.\abc -remote="samplenode.blockchain.azure.com:3200" -method="aadclient" -tenant-id="<your_directory_id>" -client-id="12345678-abcd-efgh-ijkl-1234567890ab"
 -client-secret="q@w#e%r^t&y*u(i)o_p"
 
 ```
