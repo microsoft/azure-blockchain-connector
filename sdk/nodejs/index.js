@@ -7,7 +7,7 @@ const ABCMethods = Object.freeze({
     AADClient: 'aadclient',
 });
 
-function _checkEmpty(obj, ...names) {
+function checkEmpty(obj, ...names) {
     names.forEach(name => {
         const v = obj[name];
         if (typeof v != 'string' || v === '') {
@@ -16,7 +16,7 @@ function _checkEmpty(obj, ...names) {
     })
 }
 
-async function _request_access(config, tok) {
+async function requestAccess(config, tok) {
     if (tok && tok.refreshToken) {
         tok = await refreshAccessToken(tok.refreshToken, config.adalOptions);
     } else {
@@ -39,13 +39,15 @@ async function _request_access(config, tok) {
     return tok
 }
 
+const DEFAULT_METHOD = ABCMethods.AADDevice;
+
 class ABCProviderConfig {
 
     constructor(obj) {
         this.httpOptions = {};
         this.remote = null;
         this.tenantId = null;
-        this.method = ABCMethods.AADDevice;
+        this.method = DEFAULT_METHOD;
         this.clientId = null;
         this.clientSecret = null;
 
@@ -53,12 +55,10 @@ class ABCProviderConfig {
         if (Object.values(this).indexOf(this.method) < 0) {
             throw "config: method not available"
         }
-        _checkEmpty(this, "remote", "tenantId");
+        checkEmpty(this, "remote", "tenantId");
         if (this.method === ABCMethods.AADClient) {
-            _checkEmpty(this, "clientId", "clientSecret");
+            checkEmpty(this, "clientId", "clientSecret");
         }
-
-        this.remote = this.remote.replace('https://', '').replace('http://', '')
     }
 
     get host() {
@@ -98,16 +98,25 @@ class ABCProvider {
         }
         this.provider = null;
         this.tok = null;
+        this.updateProviderPromise = null;
     }
 
     async _updateProvider() {
-        this.tok = await _request_access(this.config, this.tok);
-        let options = this.config.httpOptions || {};
-        options.headers = options.headers || [];
-        options = options.headers.filter(header => header.name !== 'Authorization');
-        options.push({name: "Authorization", value: "Bearer " + this.tok.accessToken});
-        // noinspection JSUnresolvedVariable
-        this.provider = new Web3.providers.HttpProvider(this.config.host, options);
+        if (!this.updateProviderPromise) {
+            this.updateProviderPromise = new Promise(async (resolve) => {
+                this.tok = await requestAccess(this.config, this.tok);
+                let options = this.config.httpOptions || {};
+                options.headers = options.headers || [];
+                options = options.headers.filter(header => header.name !== 'Authorization');
+                options.push({name: "Authorization", value: "Bearer " + this.tok.accessToken});
+                // noinspection JSUnresolvedVariable
+                this.provider = new Web3.providers.HttpProvider(this.config.host, options);
+                resolve()
+            }).then(() => {
+                this.updateProviderPromise = null;
+            });
+        }
+        return this.updateProviderPromise;
     }
 
     get host() {
