@@ -101,6 +101,33 @@ Authentication: Bearer <access_token>
 You can find sample code in [/samples](samples), which includes samples for [web3.js](samples/web3_sample), [truffle](samples/truffle_sample) and [Nethereum](samples/nethereum_sample). You can also get the specified settings mentioned above from these samples.
 
 
+# Access Nodes with SDK
+
+If you are going to use `web3.js` or `Nethereum.Web3` to access the transaction nodes, you may find the two packages useful: [.NET SDK](sdk/dotnet), [Node.js SDK](sdk/nodejs). Their usages are the same with the connector, and are implemented using the codebase from the samples.
+
+You provide config object to the `Web3` constructor, and the rpc client (or provider) will handle things for you.
+
+```javascript
+// web3.js: use AbcProvider instead of Web3.providers.HttpProvider
+const web3 = new Web3(new ABCProvider({
+    method: ABCMethods.AADDevice,
+    remote: 'samplenode.blockchain.azure.com:3200',
+    tenantId: 'microsoft.onmicrosoft.com',
+    clientId: null,
+    clientSecret: null
+}));
+```
+```c#
+// Nethereum.Web3: use AbcRpcClient instead of RpcClient
+var web3 = new Web3(new AbcRpcClient(new AbcConfig
+    {
+        Remote = "samplenode.blockchain.azure.com:3200",
+        TenantId = "microsoft.onmicrosoft.com",
+        Method = AbcMethods.AadAuthCode,
+        ClientId = "",
+        ClientSecret = ""
+    }));
+```
 # Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
