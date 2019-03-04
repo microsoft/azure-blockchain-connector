@@ -1,6 +1,9 @@
 # Azure Blockchain Connector
 
-ABC is a proxy for you to access blockchain safely. With this project, you can connect to nodes with basic authentication or Azure Active Directory. To use it, you just need to provide a local address, your target node address and your authentication information. Then, you can access the nodes using your client applications via the local address.
+ABC is a proxy for you to access blockchain safely. 
+With this project, you can connect to nodes with basic authentication or Azure Active Directory. 
+To use it, you just need to provide a local address, your target node address and your authentication information. 
+Then, you can access the nodes using your client applications via the local address.
 
 ## Quickstart
 
@@ -13,9 +16,14 @@ go build .\cmd\abc
 
 .\abc <your parameters here>
 ```
-You can run [./build.cmd](./build.cmd) to build for windows, macOS and linux at the same time. The output executables will be located at `./build`. Docker build is also supported but it is not recommended. You may want to check the content of `./.dockerfile`.
+You can run [./build.cmd](./build.cmd) to build for windows, macOS and linux at the same time. 
+The output executables will be located at `./build`. 
+Docker build is also supported but it is not recommended. 
+You may want to check the content of `./.dockerfile`.
 
-For authentication, this project supports basic authentication and several Azure Active Directory OAuth2 interfaces. To use the proxy, you need to supply parameters of the basic settings (local, remote addresses, secure settings), and then choose an authentication method and provide corresponding information. 
+For authentication, this project supports basic authentication and several Azure Active Directory OAuth2 interfaces. 
+To use the proxy, you need to supply parameters of the basic settings (local, remote addresses, secure settings), 
+and then choose an authentication method and provide corresponding information. 
 
 ### Basic Parameters
 
@@ -88,31 +96,43 @@ Now auth code flow and client credentials flow are supported. In auth code flow,
 
 # Access Nodes without ABC
 
-This project is only an out-of-the-box tool for users to connect to nodes conveniently. You can also update your own workflows to support interacting with a transaction nodes. In general, it is to add basic auth support and OAuth2 support. For some oauth2 methods, some pre-specified settings should be used.
+This project is only an out-of-the-box tool for users to connect to nodes conveniently. 
+You can also update your own workflows to support interacting with a transaction nodes. 
+In general, it is to add basic auth support and OAuth2 support. 
+For some oauth2 methods, some pre-specified settings should be used.
 
 To add basic auth support, add an authentication header with base64-encoded username:password pair to all requests.
 ```
 Authentication: Basic base64(<username>:<password>)
 ```
-To add AAD support, use an OAuth2 grant flow to retrieve a token. Then append the token with a bearer authentication header. We support auth code flow, device flow and client credentials flow. The former two are three-legged flows, you should use specified OAuth2 settings to let the user logging in. Or you may register self-managed AAD application to use the client credentials flow.
+To add AAD support, use an OAuth2 grant flow to retrieve a token. 
+Then append the token with a bearer authentication header. 
+We support auth code flow, device flow and client credentials flow. 
+The former two are three-legged flows, you should use specified OAuth2 settings to let the user logging in. 
+Or you may register self-managed AAD application to use the client credentials flow.
 ```
 Authentication: Bearer <access_token>
 ```
-You can find sample code in [/samples](samples), which includes samples for [web3.js](samples/web3_sample), [truffle](samples/truffle_sample) and [Nethereum](samples/nethereum_sample). You can also get the specified settings mentioned above from these samples.
+You can find sample code in [/samples](samples), which includes samples for [web3.js](samples/web3_sample), 
+[truffle](samples/truffle_sample) and [Nethereum](samples/nethereum_sample). 
+You can also get the specified settings mentioned above from these samples. Especially, the resource ID for the blockchain node access is `5838b1ed-6c81-4c2f-8ca1-693600b4e6ca`. If you want to quickly integrate the code with your current program, use the packages in the section below.
 
 
 # Access Nodes with SDK
 
-If you are going to use `web3.js` or `Nethereum.Web3` to access the transaction nodes, you may find the two packages useful: [.NET SDK](sdk/dotnet), [Node.js SDK](sdk/nodejs). Their usages are the same with the connector, and are implemented using the codebase from the samples.
+If you are going to use `web3.js` or `Nethereum.Web3` to access the transaction nodes, 
+you may find the two packages for [Nethereum.Web3](sdk/dotnet) and [web3.js](sdk/nodejs) useful. 
+They are implemented using the codebase from the samples and you only need to supply parameters like below.
 
-You provide config object to the `Web3` constructor, and the rpc client (or provider) will handle things for you.
+Include the source file and then you provide config object to the `Web3` constructor. 
+Our rpc client (or provider) will handle things for you.
 
 ```javascript
 // web3.js: use AbcProvider instead of Web3.providers.HttpProvider
 const web3 = new Web3(new ABCProvider({
-    method: ABCMethods.AADDevice,
     remote: 'samplenode.blockchain.azure.com:3200',
     tenantId: 'microsoft.onmicrosoft.com',
+    method: ABCMethods.AADDevice,
     clientId: null,
     clientSecret: null
 }));

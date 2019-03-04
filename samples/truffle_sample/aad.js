@@ -168,7 +168,6 @@ async function retrieveToken(nodeUri, opt, method) {
             tenant: "microsoft.onmicrosoft.com",
             clientId: "a8196997-9cc1-4d8a-8966-ed763e15c7e1",
             clientSecret: null,
-            resource: "5838b1ed-6c81-4c2f-8ca1-693600b4e6ca",
             redirectUri: "http://localhost:3100/_callback"
         });
     }
@@ -220,7 +219,7 @@ module.exports = {
         tenant: "<tenant-id>",
         clientId: "<client-id>",
         clientSecret: "<client-secret>", // required in client credentials flow
-        resource: "<resource>",
+        resource: "5838b1ed-6c81-4c2f-8ca1-693600b4e6ca",
         redirectUri: "<redirect_uri>", // required in auth code flow
     };
     retrieveToken("<node_uri>", opt, "aaddevice").then();

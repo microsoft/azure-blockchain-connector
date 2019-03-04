@@ -12,7 +12,7 @@ namespace dotnet
         public string Tenant = "<tenant>";
         public string ClientId = "<client_id>";
         public string ClientSecret = "<client_secret>";
-        public string Resource = "<resource>";
+        public string Resource = "5838b1ed-6c81-4c2f-8ca1-693600b4e6ca";
         public string RedirectUri = "<redirect_uri>";
     }
 
@@ -125,7 +125,6 @@ namespace dotnet
             {
                 config.ClientId = "a8196997-9cc1-4d8a-8966-ed763e15c7e1";
                 config.ClientSecret = null;
-                config.Resource = "5838b1ed-6c81-4c2f-8ca1-693600b4e6ca";
                 config.RedirectUri = "urn:ietf:wg:oauth:2.0:oob";
             }
 

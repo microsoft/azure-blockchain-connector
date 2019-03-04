@@ -71,6 +71,7 @@ class ABCProviderConfig {
             authorityHostUrl: "https://login.microsoftonline.com",
             tenant: this.tenantId,
             clientId: this.clientId,
+            resource: "5838b1ed-6c81-4c2f-8ca1-693600b4e2ca",
             clientSecret: this.clientSecret,
         };
 
@@ -80,7 +81,6 @@ class ABCProviderConfig {
                 authorityHostUrl: "https://login.microsoftonline.com",
                 clientId: "a8196997-9cc1-4d8a-8966-ed763e15c7e1",
                 clientSecret: null,
-                resource: "5838b1ed-6c81-4c2f-8ca1-693600b4e6ca",
                 redirectUri: "http://localhost:3100/_callback"
             });
         }
@@ -109,7 +109,6 @@ class ABCProvider {
                 options.headers = options.headers || [];
                 options = options.headers.filter(header => header.name !== 'Authorization');
                 options.push({name: "Authorization", value: "Bearer " + this.tok.accessToken});
-                // noinspection JSUnresolvedVariable
                 this.provider = new Web3.providers.HttpProvider(this.config.host, options);
                 resolve()
             }).then(() => {

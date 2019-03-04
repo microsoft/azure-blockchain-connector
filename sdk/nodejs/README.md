@@ -4,9 +4,9 @@ After require or import this module, you can use `ABCProvider` as a web3 provide
 
 ```javascript
 const web3 = new Web3(new ABCProvider({
-    method: ABCMethods.AADDevice,
     remote: 'samplenode.blockchain.azure.com:3200',
     tenantId: 'microsoft.onmicrosoft.com',
+    method: ABCMethods.AADDevice,
     clientId: null,
     clientSecret: null
 }));
