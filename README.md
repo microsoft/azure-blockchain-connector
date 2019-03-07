@@ -121,7 +121,9 @@ You can also get the specified settings mentioned above from these samples. Espe
 # Access Nodes with SDK
 
 If you are going to use `web3.js` or `Nethereum.Web3` to access the transaction nodes, 
-you may find the two packages for [Nethereum.Web3](sdk/dotnet) and [web3.js](sdk/nodejs) useful. 
+you may find the two packages useful: 
+[Microsoft.Blockchain.JsonRpc](sdk/Microsoft.Blockchain.JsonRpc) for `Nethereum.Web3` 
+and [node-abc-provider](sdk/node-abc-provider) for `web3.js`. 
 They are implemented using the codebase from the samples and you only need to supply parameters like below.
 
 Include the source file and then you provide config object to the `Web3` constructor. 
@@ -137,16 +139,13 @@ const web3 = new Web3(new ABCProvider({
     clientSecret: null
 }));
 ```
+
 ```c#
-// Nethereum.Web3: use AbcRpcClient instead of RpcClient
-var web3 = new Web3(new AbcRpcClient(new AbcConfig
-    {
-        Remote = "samplenode.blockchain.azure.com:3200",
-        TenantId = "microsoft.onmicrosoft.com",
-        Method = AbcMethods.AadAuthCode,
-        ClientId = "",
-        ClientSecret = ""
-    }));
+// Nethereum.Web3: use AzureBlockchainRpcClient instead of RpcClient
+new Web3(new AzureBlockchainRpcClient(remote, tenantId, useDeviceFlow=false));
+
+// Constructor overload for 'aadclient'
+new Web3(new AzureBlockchainRpcClient(remote, tenantId, clientId, clientSecret)
 ```
 # Contributing
 

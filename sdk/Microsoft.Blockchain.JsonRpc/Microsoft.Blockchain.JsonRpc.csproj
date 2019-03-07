@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <PackageId>Microsoft.Blockchain.JsonRpc</PackageId>
+        <Version>1.0.0</Version>
+        <TargetFrameworks>netstandard2.0;net472</TargetFrameworks>
+        <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+        <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.IdentityModel.Clients.ActiveDirectory" Version="4.5.1"/>
+        <PackageReference Include="Nethereum.Web3" Version="3.0.0"/>
+        <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.6.0"/>
+        <PackageReference Include="StyleCop.Analyzers" Version="1.0.2"/>
+        <AdditionalFiles Include="stylecop.json">
+            <Visible>false</Visible>
+        </AdditionalFiles>
+    </ItemGroup>
+
+</Project>
