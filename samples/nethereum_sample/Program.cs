@@ -1,22 +1,20 @@
-﻿using System;
-using System.Net.Http.Headers;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
-using Nethereum.JsonRpc.Client;
-using Nethereum.Web3;
-using Org.BouncyCastle.Math.EC;
-
-namespace nethereum_sample
+﻿namespace nethereum_sample
 {
-    class AADConfig
+    using System;
+    using System.Net.Http.Headers;
+    using System.Text;
+    using System.Threading.Tasks;
+    using Microsoft.IdentityModel.Clients.ActiveDirectory;
+    using Nethereum.JsonRpc.Client;
+    using Nethereum.Web3;
+
+    class ActiveDirectoryConfig
     {
         public string AuthorityHost = "https://login.microsoftonline.com";
         public string Tenant = "<tenant>";
         public string ClientId = "<client_id>";
         public string ClientSecret = "<client_secret>";
-        public string Resource = "<resource>";
+        public string Resource = "5838b1ed-6c81-4c2f-8ca1-693600b4e6ca";
         public string RedirectUri = "<redirect_uri>";
     }
 
@@ -29,7 +27,7 @@ namespace nethereum_sample
         static string password = "<password>";
 
         // AAD OAuth2 settings
-        static AADConfig config = new AADConfig();
+        static ActiveDirectoryConfig config = new ActiveDirectoryConfig();
 
         static Web3 web3 = null;
 
@@ -41,20 +39,16 @@ namespace nethereum_sample
             {
                 case "":
                 case "basic":
-
                     // Basic Authentication
                     web3 = web3FromBasicAuth(nodeUri, username, password);
-
                     break;
                 case "aadauthcode":
                 case "aaddevice":
                 case "aadclient":
-
                     // AAD OAuth2
                     var tok = await retrieveToken(method, config);
                     printToken(tok);
                     web3 = web3FromOAuth2(nodeUri, tok.AccessToken);
-
                     break;
                 default:
                     return;
@@ -80,7 +74,7 @@ namespace nethereum_sample
             Console.WriteLine("Access: " + tok.AccessToken);
         }
 
-        static async Task<AuthenticationResult> retrieveToken(string method, AADConfig config)
+        static async Task<AuthenticationResult> retrieveToken(string method, ActiveDirectoryConfig config)
         {
             // aadauthcode and aaddevice method use fixed settings
             if (method == "aadauthcode" || method == "aaddevice")
@@ -89,14 +83,13 @@ namespace nethereum_sample
                 config.Tenant = "microsoft.onmicrosoft.com";
                 config.ClientId = "a8196997-9cc1-4d8a-8966-ed763e15c7e1";
                 config.ClientSecret = null;
-                config.Resource = "5838b1ed-6c81-4c2f-8ca1-693600b4e6ca";
                 config.RedirectUri = "urn:ietf:wg:oauth:2.0:oob";
             }
 
             var authority = config.AuthorityHost + "/" + config.Tenant;
 
             var ctx = new AuthenticationContext(authority);
-            AuthenticationResult result = null;
+            AuthenticationResult result;
 
             try
             {
