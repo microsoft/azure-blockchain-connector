@@ -51,7 +51,7 @@ func newProxyFromFlags() *proxy.Proxy {
 		clientID, tenantID, clientSecret string
 		useWebview                       bool
 		authSvcAddr                      string
-		selectSignedInAccount               bool
+		selectSignedInAccount            bool
 	)
 	flag.StringVar(&clientID, "client-id", "", "OAuth: application (client) ID")
 	flag.StringVar(&tenantID, "tenant-id", "", "OAuth: directory (tenant) ID")
