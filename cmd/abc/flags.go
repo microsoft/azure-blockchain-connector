@@ -51,12 +51,14 @@ func newProxyFromFlags() *proxy.Proxy {
 		clientID, tenantID, clientSecret string
 		useWebview                       bool
 		authSvcAddr                      string
+		selectSignedInAccount            bool
 	)
 	flag.StringVar(&clientID, "client-id", "", "OAuth: application (client) ID")
 	flag.StringVar(&tenantID, "tenant-id", "", "OAuth: directory (tenant) ID")
 	flag.StringVar(&clientSecret, "client-secret", "", "OAuth: client secret")
 	flag.BoolVar(&useWebview, "webview", true, "OAuth: open a webview o to receive callbacks, applicable for Windows/macOS")
 	flag.StringVar(&authSvcAddr, "authcode-addr", defaultLocalAddr, "OAuth: local address to receive callbacks")
+	flag.BoolVar(&selectSignedInAccount, "select-signed-in-account", true, "OAuth: in aadauthcode mode, enable to select from existing signed-in account to get auth code")
 
 	var whenlogstr string
 	var whatlogstr string
@@ -125,6 +127,10 @@ func newProxyFromFlags() *proxy.Proxy {
 		switch params.Method {
 		case methodOAuthAuthCode:
 			checkStr("tenant-id", tenantID)
+			var promptMethodInAuthCode = authcode.PromptSelectAccount
+			if !selectSignedInAccount {
+				promptMethodInAuthCode = authcode.PromptLogin
+			}
 			return &proxyproviders.OAuthAuthCode{
 				Config: &authcode.Config{
 					Config: &oauth2.Config{
@@ -135,7 +141,7 @@ func newProxyFromFlags() *proxy.Proxy {
 						RedirectURL:  redirectURL,
 					},
 					Resource: hcResource,
-					Prompt:   authcode.PromptSelectAccount,
+					Prompt:   promptMethodInAuthCode,
 				},
 				UseWebview: useWebview,
 				SvcAddr:    authSvcAddr,

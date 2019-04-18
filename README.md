@@ -67,10 +67,14 @@ Now auth code flow and client credentials flow are supported. In auth code flow,
 
 **-authcode-addr** *string*: an optional arg for auth code flow. When popping-up window is not supported, or **-webview** is false, the proxy will listen to the host specified by this arg to receive auth code. The default value is `localhost:3100`. It only works when corresponding values are set in the Azure Portal. If using AAD, it will print the first pair of the access_token and refresh_token.
 
+**-select-signed-in-account** *bool*: an optional arg for auth code flow, with default value of true. It indicates whether allows to select an existing signed-in account or enforce reauthentication when requesting an auth code.
+
 ```shell
 # Example
 
 .\abc -remote="samplenode.blockchain.azure.com:3200" -method="aadauthcode" -tenant-id="<your_directory_id>"
+
+.\abc -remote="samplenode.blockchain.azure.com:3200" -method="aadauthcode" -tenant-id="<your_directory_id>" -select-signed-in-account=false
 
 .\abc -remote="samplenode.blockchain.azure.com:3200" -method="aaddevice" -tenant-id="<your_directory_id>"
 
