@@ -21,7 +21,7 @@ function getAuthUrl(opt, state) {
         opt.redirectUri +
         `&state=${state}&resource=` +
         opt.resource +
-        '&prompt=select_account';
+        '&prompt=login';
 }
 
 function authCodeGrant(opt) {
