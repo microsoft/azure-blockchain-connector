@@ -117,40 +117,9 @@ Or you may register self-managed AAD application to use the client credentials f
 ```
 Authentication: Bearer <access_token>
 ```
-You can find sample code in [/samples](samples), which includes samples for [web3.js](samples/web3_sample), 
-[truffle](samples/truffle_sample) and [Nethereum](samples/nethereum_sample). 
-You can also get the specified settings mentioned above from these samples. Especially, the resource ID for the blockchain node access is `5838b1ed-6c81-4c2f-8ca1-693600b4e6ca`. If you want to quickly integrate the code with your current program, use the packages in the section below.
+You can find sample C# code to authenticate using AAD in [Nethereum](samples/nethereum_sample). 
+You can also get the specified settings mentioned above from these samples. Especially, the resource ID for the blockchain node access is `5838b1ed-6c81-4c2f-8ca1-693600b4e6ca`.
 
-
-# Access Nodes with SDK
-
-If you are going to use `web3.js` or `Nethereum.Web3` to access the transaction nodes, 
-you may find the two packages useful: 
-[Microsoft.Blockchain.JsonRpc](sdk/Microsoft.Blockchain.JsonRpc) for `Nethereum.Web3` 
-and [node-abc-provider](sdk/node-abc-provider) for `web3.js`. 
-They are implemented using the codebase from the samples and you only need to supply parameters like below.
-
-Include the source file and then you provide config object to the `Web3` constructor. 
-Our rpc client (or provider) will handle things for you.
-
-```javascript
-// web3.js: use AbcProvider instead of Web3.providers.HttpProvider
-const web3 = new Web3(new ABCProvider({
-    remote: 'samplenode.blockchain.azure.com:3200',
-    tenantId: 'microsoft.onmicrosoft.com',
-    method: ABCMethods.AADDevice,
-    clientId: null,
-    clientSecret: null
-}));
-```
-
-```c#
-// Nethereum.Web3: use AzureBlockchainRpcClient instead of RpcClient
-new Web3(new AzureBlockchainRpcClient(remote, tenantId, useDeviceFlow=false));
-
-// Constructor overload for 'aadclient'
-new Web3(new AzureBlockchainRpcClient(remote, tenantId, clientId, clientSecret)
-```
 # Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
