@@ -2,7 +2,6 @@
 {
     using System;
     using System.Net.Http.Headers;
-    using System.Text;
     using System.Threading.Tasks;
     using Microsoft.IdentityModel.Clients.ActiveDirectory;
     using Nethereum.JsonRpc.Client;
@@ -10,24 +9,18 @@
 
     class ActiveDirectoryConfig
     {
-        public string AuthorityHost = "https://login.microsoftonline.com";
+        public const string AuthorityHost = "https://login.microsoftonline.com";
+        public const string Resource = "5838b1ed-6c81-4c2f-8ca1-693600b4e6ca"; // Resource Id for Azure Blockchain Service
         public string Tenant = "<tenant>";
         public string ClientId = "<client_id>";
         public string ClientSecret = "<client_secret>";
-        public string Resource = "5838b1ed-6c81-4c2f-8ca1-693600b4e6ca";
         public string RedirectUri = "<redirect_uri>";
     }
 
     class Program
     {
-        static string nodeUri = "<node_uri>";
-
-        // Basic Authentication settings
-        static string username = "<username>";
-        static string password = "<password>";
-
-        // AAD OAuth2 settings
-        static ActiveDirectoryConfig config = new ActiveDirectoryConfig();
+        static readonly ActiveDirectoryConfig config = new ActiveDirectoryConfig();
+        static readonly string nodeUri = "https://<blockchain_member_name>.blockchain.azure.com:3200";
 
         static Web3 web3 = null;
 
@@ -35,88 +28,54 @@
         {
             var method = "aadauthcode";
 
-            switch (method)
-            {
-                case "":
-                case "basic":
-                    // Basic Authentication
-                    web3 = web3FromBasicAuth(nodeUri, username, password);
-                    break;
-                case "aadauthcode":
-                case "aaddevice":
-                case "aadclient":
-                    // AAD OAuth2
-                    var tok = await retrieveToken(method, config);
-                    printToken(tok);
-                    web3 = web3FromOAuth2(nodeUri, tok.AccessToken);
-                    break;
-                default:
-                    return;
-            }
+            var tok = await RetrieveToken(method, config);
+            PrintToken(tok);
+            web3 = CreateWeb3FromOAuth2(nodeUri, tok.AccessToken);
+
         }
 
-        static Web3 web3FromBasicAuth(string nodeUri, string username, string password)
-        {
-            var authValue =
-                Convert.ToBase64String(Encoding.UTF8.GetBytes($"{username}:{password}"));
-            var authHeader = new AuthenticationHeaderValue("Basic", authValue);
-            return new Web3(new RpcClient(new Uri(nodeUri), authHeader, null, null));
-        }
-
-        static Web3 web3FromOAuth2(string nodeUri, string accessToken)
+        static Web3 CreateWeb3FromOAuth2(string nodeUri, string accessToken)
         {
             var authHeader = new AuthenticationHeaderValue("Bearer", accessToken);
             return new Web3(new RpcClient(new Uri(nodeUri), authHeader, null, null));
         }
 
-        static void printToken(AuthenticationResult tok)
+        static void PrintToken(AuthenticationResult tok)
         {
-            Console.WriteLine("Access: " + tok.AccessToken);
+            Console.WriteLine("Access Token: " + tok.AccessToken);
         }
 
-        static async Task<AuthenticationResult> retrieveToken(string method, ActiveDirectoryConfig config)
+        static async Task<AuthenticationResult> RetrieveToken(string method, ActiveDirectoryConfig config)
         {
-            // aadauthcode and aaddevice method use fixed settings
-            if (method == "aadauthcode" || method == "aaddevice")
-            {
-                config.AuthorityHost = "https://login.microsoftonline.com";
-                config.Tenant = "microsoft.onmicrosoft.com";
-                config.ClientId = "a8196997-9cc1-4d8a-8966-ed763e15c7e1";
-                config.ClientSecret = null;
-                config.RedirectUri = "urn:ietf:wg:oauth:2.0:oob";
-            }
-
-            var authority = config.AuthorityHost + "/" + config.Tenant;
-
-            var ctx = new AuthenticationContext(authority);
+            var ctx = new AuthenticationContext(ActiveDirectoryConfig.AuthorityHost + "/" + config.Tenant);
             AuthenticationResult result;
 
             try
             {
-                result = await ctx.AcquireTokenSilentAsync(config.Resource, config.ClientId);
+                result = await ctx.AcquireTokenSilentAsync(ActiveDirectoryConfig.Resource, config.ClientId);
             }
             catch (Exception)
             {
                 switch (method)
                 {
                     case "aadauthcode":
-                        result = await ctx.AcquireTokenAsync(config.Resource, config.ClientId,
+                        result = await ctx.AcquireTokenAsync(ActiveDirectoryConfig.Resource, config.ClientId,
                             new Uri(config.RedirectUri),
                             new PlatformParameters(PromptBehavior.SelectAccount));
                         break;
                     case "aaddevice":
-                        var codeResult = await ctx.AcquireDeviceCodeAsync(config.Resource, config.ClientId);
+                        var codeResult = await ctx.AcquireDeviceCodeAsync(ActiveDirectoryConfig.Resource, config.ClientId);
                         Console.WriteLine("Open: " + codeResult.VerificationUrl);
                         Console.WriteLine("Enter: " + codeResult.UserCode);
                         result = await ctx.AcquireTokenByDeviceCodeAsync(codeResult);
                         break;
                     case "aadclient":
                         var clientCredential = new ClientCredential(config.ClientId, config.ClientSecret);
-                        result = await ctx.AcquireTokenAsync(config.Resource, clientCredential);
+                        result = await ctx.AcquireTokenAsync(ActiveDirectoryConfig.Resource, clientCredential);
                         break;
                     default:
-                        Console.WriteLine("method not found");
-                        throw new Exception("method not found");
+                        Console.WriteLine("Method not found");
+                        throw new Exception("Method not found");
                 }
             }
 
