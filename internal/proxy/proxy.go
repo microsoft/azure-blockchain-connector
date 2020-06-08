@@ -77,6 +77,7 @@ func (p *Proxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	buf := new(bytes.Buffer)
 	_, _ = buf.ReadFrom(req.Body)
+	
 	req.URL.Host = params.Remote
 	req.URL.Scheme = "https"
 
