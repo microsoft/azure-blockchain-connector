@@ -115,7 +115,11 @@ func (p *Proxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	// Add GZIP support 
 	switch response.Header.Get("Content-Encoding") {
 	case "gzip":
-		reader, _ := gzip.NewReader(response.Body)
+		reader, err := gzip.NewReader(response.Body)
+		if err != nil {
+			logStrBuilder.WriteString(fmt.Sprintln("Error while decoding gzip data:\n", err))
+			return 
+		}
 		defer reader.Close()
 		data, err := ioutil.ReadAll(reader)
 		if err != nil {
