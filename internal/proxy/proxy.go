@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"net"
+	"io/ioutil"
 	"net/http"
+	"compress/gzip"
 	"strings"
 )
 
@@ -75,7 +77,7 @@ func (p *Proxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	buf := new(bytes.Buffer)
 	_, _ = buf.ReadFrom(req.Body)
-
+	//req.Header = Header{"Content-Type": {"text/plain"}}
 	req.URL.Host = params.Remote
 	req.URL.Scheme = "https"
 
@@ -108,11 +110,26 @@ func (p *Proxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 	defer response.Body.Close()
-
 	buf = new(bytes.Buffer)
-	_, _ = buf.ReadFrom(response.Body)
+	
+	// Add GZIP support 
+	switch response.Header.Get("Content-Encoding") {
+	case "gzip":
+		reader, _ := gzip.NewReader(response.Body)
+		defer reader.Close()
+		data, err := ioutil.ReadAll(reader)
+		if err != nil {
+			logStrBuilder.WriteString(fmt.Sprintln("Error while reading gzip data:\n", err))
+			return 
+		}
+		buf.Write(data)
+	default:
+		_, _ = buf.ReadFrom(response.Body)
+	}
+	
 
 	logStrBuilder.WriteString(fmt.Sprintln("Response Status Code:", response.StatusCode))
+
 	if params.Whatlog >= LogWhatDetailed {
 		logStrBuilder.WriteString(fmt.Sprintln(buf.String()))
 	}
